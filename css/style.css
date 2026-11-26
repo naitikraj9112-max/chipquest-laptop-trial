@@ -1,0 +1,225 @@
+/* css/style.css — CHIPQUEST styling (sections 3.2, 3.3, 12) */
+
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  /* Disable text selection (section 12) */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  /* Disable context menu handled by JS */
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #0F1020; /* INK */
+  font-family: 'Press Start 2P', monospace;
+  /* Prevent pull-to-refresh */
+  overscroll-behavior: none;
+  touch-action: manipulation;
+}
+
+#game {
+  position: absolute;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  /* Canvas is positioned by JS */
+}
+
+/* Touch controls (section 3.3) */
+#touch-controls {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 140px;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 10px 20px;
+  pointer-events: none;
+  z-index: 100;
+}
+
+#dpad {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  pointer-events: auto;
+}
+
+.dpad-btn {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background: rgba(244, 244, 250, 0.3);
+  border: 2px solid rgba(244, 244, 250, 0.5);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: rgba(244, 244, 250, 0.8);
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.dpad-btn:active {
+  background: rgba(244, 244, 250, 0.5);
+}
+
+.dpad-up { top: 0; left: 40px; }
+.dpad-down { bottom: 0; left: 40px; }
+.dpad-left { top: 40px; left: 0; }
+.dpad-right { top: 40px; right: 0; }
+
+/* Center of D-pad */
+.dpad-center {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  top: 40px;
+  left: 40px;
+  background: rgba(244, 244, 250, 0.1);
+  border-radius: 4px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  pointer-events: auto;
+}
+
+.action-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 2px solid rgba(244, 244, 250, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 14px;
+  color: rgba(244, 244, 250, 0.9);
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.action-btn:active {
+  transform: scale(0.95);
+}
+
+#btn-a {
+  background: rgba(0, 113, 197, 0.5); /* BLUE */
+}
+
+#btn-b {
+  background: rgba(230, 57, 70, 0.4); /* RED */
+  width: 40px;
+  height: 40px;
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+
+/* Mute button (section 3.3) */
+#btn-mute {
+  position: fixed;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  background: rgba(244, 244, 250, 0.2);
+  border: 1px solid rgba(244, 244, 250, 0.4);
+  border-radius: 4px;
+  color: rgba(244, 244, 250, 0.8);
+  font-size: 16px;
+  cursor: pointer;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+}
+
+/* Fullscreen button */
+#btn-fullscreen {
+  position: fixed;
+  top: 8px;
+  right: 48px;
+  width: 32px;
+  height: 32px;
+  background: rgba(244, 244, 250, 0.2);
+  border: 1px solid rgba(244, 244, 250, 0.4);
+  border-radius: 4px;
+  color: rgba(244, 244, 250, 0.8);
+  font-size: 14px;
+  cursor: pointer;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Rotate device overlay (section 3.3) */
+#rotate-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #0F1020;
+  z-index: 999;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  color: #F4F4FA;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  text-align: center;
+  padding: 20px;
+  line-height: 2;
+}
+
+#rotate-overlay .rotate-icon {
+  font-size: 48px;
+  margin-bottom: 20px;
+}
+
+@media (orientation: portrait) and (max-width: 600px) {
+  #rotate-overlay {
+    display: flex !important;
+  }
+  #game, #touch-controls {
+    display: none !important;
+  }
+}
+
+/* Loading screen */
+#loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #0F1020;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #F4F4FA;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  z-index: 1000;
+}
+
+/* Disable double-tap zoom */
+* {
+  touch-action: manipulation;
+}

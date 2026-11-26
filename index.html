@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="CHIPQUEST: The Laptop Trial - An 8-bit pixel RPG about choosing the right AI PC">
+  <meta name="theme-color" content="#0F1020">
+  <title>CHIPQUEST: The Laptop Trial</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body oncontextmenu="return false">
+  <!-- Loading screen -->
+  <div id="loading">LOADING...</div>
+
+  <!-- Rotate device overlay (section 3.3) -->
+  <div id="rotate-overlay">
+    <div class="rotate-icon">📱↔️</div>
+    <p>ROTATE DEVICE</p>
+    <p>Play in landscape mode</p>
+  </div>
+
+  <!-- Game canvas -->
+  <canvas id="game"></canvas>
+
+  <!-- Touch controls (section 3.3, shown only on touch) -->
+  <div id="touch-controls">
+    <div id="dpad">
+      <div class="dpad-btn dpad-up">▲</div>
+      <div class="dpad-btn dpad-down">▼</div>
+      <div class="dpad-btn dpad-left">◄</div>
+      <div class="dpad-btn dpad-right">►</div>
+      <div class="dpad-center"></div>
+    </div>
+    <div class="action-buttons">
+      <button id="btn-b" class="action-btn">B</button>
+      <button id="btn-a" class="action-btn">A</button>
+    </div>
+  </div>
+
+  <!-- Mute button -->
+  <button id="btn-mute">🔊</button>
+
+  <!-- Fullscreen button (section 12) -->
+  <button id="btn-fullscreen" title="Fullscreen">⛶</button>
+
+  <script>
+    // Fullscreen toggle (section 12)
+    const fsBtn = document.getElementById('btn-fullscreen');
+    if (!document.fullscreenEnabled && !document.webkitFullscreenEnabled) {
+      fsBtn.style.display = 'none';
+    }
+    fsBtn.addEventListener('click', () => {
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+      } else {
+        const el = document.documentElement;
+        (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+      }
+    });
+
+    // Prevent default on touch events
+    document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+  </script>
+
+  <!-- Main entry -->
+  <script type="module">
+    import './js/core/main.js';
+    // Hide loading screen once first frame renders
+    requestAnimationFrame(() => {
+      const loading = document.getElementById('loading');
+      if (loading) loading.style.display = 'none';
+    });
+  </script>
+</body>
+</html>
