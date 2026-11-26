@@ -224,20 +224,56 @@ console.log('I4: AURA PRO completes by turn 5 in BATTLE2...');
   assert('I4', proAlwaysCompletes, 'PRO always completes by turn 5');
 }
 
-// I5: BATTLE2: AMD competitor rival TASK <= 75 (and never faints) when Intel PRO completes
-console.log('I5: AMD competitor rival TASK <= 75 when Intel PRO completes...');
+// I5: BATTLE2 (fake Stage 1 rematch): rival AURA GO TASK <= 62 when AURA PRO completes
+console.log('I5: BATTLE2 rival AURA GO TASK <= 62 when PRO completes...');
 {
   const rivalScript = ['M1', 'M2', 'M1', 'M3', 'M2', 'M4'];
   const rival = { task: 0, batt: 50, heat: 0 };
-  const rLaptop = laptops.amd_comp;
+  const rLaptop = laptops.aura_go;
 
-  // Simulate 4 rival turns (Intel PRO completes on turn 5, so rival gets 4 turns)
+  // Simulate 4 rival turns (PRO completes on turn 5, so rival gets 4 turns)
   for (let t = 0; t < 4; t++) {
     const move = battle2Moves[rivalScript[t]];
     simulateMove(rival, rLaptop, move);
     rival.heat = Math.max(0, rival.heat - 5);
   }
-  assert('I5', rival.task <= 75 && rival.batt > 0, `AMD Rival TASK is ${rival.task}%, BATT is ${rival.batt}% (expected TASK <= 75 & BATT > 0)`);
+  assert('I5', rival.task <= 62, `Rival AURA GO TASK is ${rival.task} (expected <= 62)`);
+}
+
+// I6: BATTLE3 (Gym Match): Real Intel Core Ultra completes by turn 5 for all sequences
+console.log('I6: Real Intel Core Ultra completes by turn 5 in Gym BATTLE3...');
+{
+  const moveIds = ['M1', 'M2', 'M3', 'M4'];
+  let intelAlwaysCompletes = true;
+  for (const seq of allSequences(5, moveIds)) {
+    const actor = { task: 0, batt: 50, heat: 0 };
+    const laptop = laptops.aura_pro;
+    let completed = false;
+    for (let t = 0; t < 5; t++) {
+      const move = battle2Moves[seq[t]];
+      const r = simulateMove(actor, laptop, move);
+      if (r.completed) { completed = true; break; }
+      if (r.fainted) break;
+      actor.heat = Math.max(0, actor.heat - 5);
+    }
+    if (!completed) { intelAlwaysCompletes = false; break; }
+  }
+  assert('I6', intelAlwaysCompletes, 'Intel Core Ultra always completes Gym Match by turn 5');
+}
+
+// I7: BATTLE3 (Gym Match): Real AMD competitor rival TASK <= 75 and survives 4 turns when Intel finishes
+console.log('I7: Gym Match AMD competitor rival TASK <= 75 when Intel completes...');
+{
+  const rivalScript = ['M1', 'M2', 'M1', 'M3', 'M2', 'M4'];
+  const rival = { task: 0, batt: 50, heat: 0 };
+  const rLaptop = laptops.amd_comp;
+
+  for (let t = 0; t < 4; t++) {
+    const move = battle2Moves[rivalScript[t]];
+    simulateMove(rival, rLaptop, move);
+    rival.heat = Math.max(0, rival.heat - 5);
+  }
+  assert('I7', rival.task <= 75 && rival.batt > 0, `Gym AMD Rival TASK is ${rival.task}%, BATT is ${rival.batt}% (expected TASK <= 75 & BATT > 0)`);
 }
 
 console.log(`\n=== Results: ${pass} passed, ${fail} failed ===`);

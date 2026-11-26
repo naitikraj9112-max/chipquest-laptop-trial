@@ -20,6 +20,7 @@ import { StoreScene } from '../scenes/store.js';
 import { createBattleScene } from '../scenes/battle.js';
 import { PersonaScene } from '../scenes/persona.js';
 import { PcdexScene } from '../scenes/pcdex.js';
+import { GymScene } from '../scenes/gym.js';
 import { ResultScene } from '../scenes/result.js';
 
 async function boot() {
@@ -58,7 +59,7 @@ async function boot() {
   art.init();
   fx.init();
 
-  // Register scenes — BATTLE1 and BATTLE2 get separate instances
+  // Register scenes — BATTLE1, BATTLE2 (fake Stage 1), and BATTLE3 (Gym Stage 2)
   sceneManager.register('TITLE', TitleScene);
   sceneManager.register('INTRO', IntroScene);
   sceneManager.register('STORE', StoreScene);
@@ -66,6 +67,8 @@ async function boot() {
   sceneManager.register('PERSONA', PersonaScene);
   sceneManager.register('BATTLE2', createBattleScene('BATTLE2'));
   sceneManager.register('PCDEX', PcdexScene);
+  sceneManager.register('GYM', GymScene);
+  sceneManager.register('BATTLE3', createBattleScene('BATTLE3'));
   sceneManager.register('RESULT', ResultScene);
 
   // Fullscreen button shown on TITLE; Pause button shown on in-game scenes
@@ -120,16 +123,20 @@ async function boot() {
     }
     if (startScene === 'BATTLE2') {
       state.flags.starter = state.flags.starter || 'nova';
+      state.laptops.player = 'aura_pro';
+      state.laptops.rival = 'aura_go';
       state.flags.persona = state.flags.persona || 'student';
-      const pair = getStage2Pair(state.flags.persona);
-      state.laptops.player = pair.player;
-      state.laptops.rival = pair.rival;
     }
     if (startScene === 'PCDEX') {
       state.flags.persona = state.flags.persona || 'student';
+    }
+    if (startScene === 'GYM' || startScene === 'BATTLE3') {
+      state.flags.starter = state.flags.starter || 'nova';
+      state.flags.persona = state.flags.persona || 'student';
+      state.flags.gymUnlocked = true;
       const pair = getStage2Pair(state.flags.persona);
-      state.laptops.player = pair.player;
-      state.laptops.rival = pair.rival;
+      state.laptops.gymPlayer = pair.player;
+      state.laptops.gymRival = pair.rival;
     }
     if (startScene === 'RESULT') {
       state.flags.persona = state.flags.persona || 'student';

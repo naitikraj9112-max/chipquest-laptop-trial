@@ -28,7 +28,7 @@ const C6=84, D6=86, E6=88, F6=89, G6=91;
 const Db3=49, Eb3=51, Gb3=54, Ab3=56;
 const Db4=61, Eb4=63, Gb4=66, Ab4=68;
 const Db5=73, Eb5=75, Gb5=78, Ab5=80;
-const Cs5=73, Fs4=66, Fs3=54, Cs4=61;
+const Cs5=73, Fs5=78, Fs4=66, Fs3=54, Cs4=61;
 
 // ── MUS_TITLE ───────────────────────────────────────────────────────
 // C major / 120 BPM / 8 bars / loop / Heroic & bouncy
@@ -411,6 +411,94 @@ const MUS_RESULT = {
   ],
 };
 
+// ── MUS_GYM ──────────────────────────────────────────────────────────
+// G major / 126 BPM / 8 bars / loop / Heroic Pokemon-Gym interior theme
+const MUS_GYM = {
+  id: 'MUS_GYM', bpm: 126, bars: 8, loop: true, key: 'G major',
+  ch: [
+    // LEAD – bold brassy square theme
+    { wave: 'square', vol: 0.65, notes: [
+      // Bar 1-2: Rising gym motif (exact 16 sixteenths per bar)
+      N(G4,4), N(B4,2), N(D5,2), N(G5,4), N(Fs5,2), N(D5,2),
+      N(E5,4), N(D5,2), N(C5,2), N(B4,4), R(4),
+      // Bar 3-4
+      N(C5,4), N(E5,2), N(G5,2), N(Fs5,4), N(E5,2), N(D5,2),
+      N(D5,4), N(C5,2), N(B4,2), N(A4,4), R(4),
+      // Bar 5-6
+      N(G4,4), N(B4,2), N(D5,2), N(G5,4), N(A5,2), N(G5,2),
+      N(Fs5,4), N(E5,2), N(D5,2), N(B4,4), R(4),
+      // Bar 7-8
+      N(C5,2), N(D5,2), N(E5,2), N(Fs5,2), N(G5,4), N(D5,4),
+      N(G5,6), R(2), N(D5,4), R(4),
+    ]},
+    // HARM – rhythmic gym chords (8 bars * 16 sixteenths)
+    { wave: 'square25', vol: 0.3, notes: [
+      ...[
+        [G3,B3,D4], [C4,E4,G4],
+        [C4,E4,G4], [D4,Fs4,A4],
+        [G3,B3,D4], [B3,D4,Fs4],
+        [C4,E4,G4], [G3,B3,D4],
+      ].flatMap(c => [N(c[0],4), N(c[1],2), N(c[2],2), N(c[0],4), N(c[2],4)]),
+    ]},
+    // BASS – marching gym bass (8 bars * 16)
+    { wave: 'triangle', vol: 0.8, notes: [
+      ...[G3, C3, C3, D3, G3, B3, C3, G3].flatMap(r => [
+        N(r,4), N(r,4), N(r,4), N(r+7,4),
+      ]),
+    ]},
+    // PERC – steady arena march (8 bars * 16)
+    { wave: 'noise', vol: 0.45, notes: [
+      ...Array(8).fill(null).flatMap(() => [
+        N(1,4), N(2,2), N(2,2), N(1,4), N(2,4),
+      ]),
+    ]},
+  ],
+};
+
+// ── MUS_GYM_BATTLE ───────────────────────────────────────────────────
+// E minor / 172 BPM / 8 bars / loop / Championship Gym Leader battle
+const MUS_GYM_BATTLE = {
+  id: 'MUS_GYM_BATTLE', bpm: 172, bars: 8, loop: true, key: 'E minor',
+  ch: [
+    // LEAD – fast Pokemon-Gym duel arpeggio & soaring lead (16 per bar)
+    { wave: 'square', vol: 0.72, notes: [
+      // Bar 1-2
+      N(E5,2), N(B4,2), N(E5,2), N(G5,2), N(Fs5,2), N(E5,2), N(D5,2), N(B4,2),
+      N(C5,4), N(D5,4), N(E5,4), R(4),
+      // Bar 3-4
+      N(E5,2), N(Fs5,2), N(G5,2), N(A5,2), N(G5,2), N(Fs5,2), N(E5,2), N(D5,2),
+      N(B4,4), N(D5,4), N(Fs5,4), R(4),
+      // Bar 5-6
+      N(G5,2), N(Fs5,2), N(E5,2), N(D5,2), N(C5,2), N(D5,2), N(E5,2), N(G5,2),
+      N(Fs5,4), N(E5,4), N(D5,4), N(B4,4),
+      // Bar 7-8
+      N(C5,2), N(D5,2), N(E5,2), N(Fs5,2), N(G5,4), N(B5,4),
+      N(E5,6), N(B4,2), N(E5,4), R(4),
+    ]},
+    // HARM – relentless 16th-pair pulse
+    { wave: 'square25', vol: 0.32, notes: [
+      ...[
+        [E4,G4,B4], [C4,E4,G4],
+        [E4,G4,B4], [D4,Fs4,A4],
+        [C4,E4,G4], [D4,Fs4,A4],
+        [C4,E4,G4], [E4,G4,B4],
+      ].flatMap(c => [N(c[0],2), N(c[1],2), N(c[2],2), N(c[1],2), N(c[0],2), N(c[2],2), N(c[1],2), N(c[2],2)]),
+    ]},
+    // BASS – driving octaves
+    { wave: 'triangle', vol: 0.85, notes: [
+      ...[E3, C3, E3, D3, C3, D3, C3, E3].flatMap(r => [
+        N(r,2), N(r+12,2), N(r,2), N(r+12,2), N(r,2), N(r+12,2), N(r,2), N(r+12,2),
+      ]),
+    ]},
+    // PERC – intense double-time battle drums
+    { wave: 'noise', vol: 0.65, notes: [
+      ...Array(8).fill(null).flatMap(() => [
+        N(1,2), N(2,1), N(2,1), N(1,2), N(2,2), N(1,2), N(2,1), N(2,1), N(1,2), N(2,2),
+      ]),
+    ]},
+  ],
+};
+
 // ── Export ───────────────────────────────────────────────────────────
 export const musicCues = {
   MUS_TITLE,
@@ -418,6 +506,8 @@ export const musicCues = {
   MUS_RIVAL,
   MUS_BATTLE1,
   MUS_BATTLE2,
+  MUS_GYM,
+  MUS_GYM_BATTLE,
   MUS_LOSE,
   MUS_WIN,
   MUS_RESULT,

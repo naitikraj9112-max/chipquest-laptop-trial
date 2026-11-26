@@ -21,6 +21,7 @@ let laptopCardId = null;
 let cardChoiceActive = false;
 let storePhase = 'explore'; // explore, cutscene, card, post_battle1, persona_transition
 let firstMove = true;
+let transitioningToGym = false;
 
 export const StoreScene = {
   get entityManager() { return entityManager; },
@@ -31,20 +32,50 @@ export const StoreScene = {
       window.CQ.storeScene = StoreScene;
     }
 
-    // If returning from BATTLE1
+    // Returning from BATTLE1 (before persona)
     if (state.flags.b1Winner && !state.flags.persona) {
       storePhase = 'post_battle1';
       runPostBattle1();
       return;
     }
 
-    // Fresh entry
     entityManager.clear();
+    transitioningToGym = false;
+    laptopCardShowing = false;
+    toastTimer = 0;
+
+    // Entering Store after PC-DEX recommendation or walking back out of Gym
+    if (params.fromPcdex || params.fromGym || (state.flags.gymUnlocked && !state.flags.b3Winner)) {
+      introTriggered = true;
+      storePhase = 'explore';
+      firstMove = false;
+      const startRow = params.fromGym ? 1 : 3;
+      const startDir = params.fromGym ? 'down' : 'up';
+      player = entityManager.add(new Entity('player', 9, startRow, startDir, 'spr_player'));
+      state.player.x = 9;
+      state.player.y = startRow;
+      state.player.dir = startDir;
+
+      guide = entityManager.add(new Entity('guide', 9, 5, 'up', 'spr_guide'));
+      // Rohan is waiting inside the PRO GYM now
+      rival = entityManager.add(new Entity('rival', 11, 6, 'left', 'spr_rival'));
+      rival.visible = false;
+
+      rep1 = entityManager.add(new Entity('rep1', 4, 9, 'down', 'spr_rep1'));
+      rep2 = entityManager.add(new Entity('rep2', 15, 5, 'down', 'spr_rep2'));
+      rep3 = entityManager.add(new Entity('rep3', 14, 11, 'left', 'spr_rep3'));
+
+      if (window.CQ) {
+        window.CQ.audio.playMusic('MUS_STORE', { fadeMs: 300 });
+      }
+      showToast(['PRO GYM OPEN NORTH!', 'Walk UP through the Gym Door!'], 4200);
+      return;
+    }
+
+    // Fresh entry
     introTriggered = false;
     storePhase = 'explore';
     firstMove = true;
-    laptopCardShowing = false;
-    toastTimer = 0;
 
     // Player
     player = entityManager.add(new Entity('player', 9, 12, 'up', 'spr_player'));
@@ -100,8 +131,16 @@ export const StoreScene = {
       return;
     }
 
+    if (transitioningToGym) return;
+
     // Player movement
     if (!player.moving) {
+      // Stepping through North Gym Door once PC-DEX unlocks Stage 2
+      if (state.flags.gymUnlocked && player.row === 0 && (player.col === 9 || player.col === 10)) {
+        enterGymRoom();
+        return;
+      }
+
       const dir = input.dir();
       if (dir) {
         // Show device-appropriate controls hint on first move
@@ -137,8 +176,18 @@ export const StoreScene = {
     // Draw tilemap
     tilemap.draw(ctx, camera.x, camera.y);
 
-    // Draw mini laptops on tables if not picked by player or rival (section 6)
-    if (state.laptops.player !== 'nova' && state.laptops.rival !== 'nova') {
+    // Draw flashing PRO GYM marquee indicator over north doors once unlocked
+    if (state.flags.gymUnlocked) {
+      const gx = 9 * cfg.TILE - camera.x;
+      const gy = 0 - camera.y;
+      const gBlink = Math.floor(Date.now() / 300) % 2 === 0;
+      ctx.fillStyle = gBlink ? cfg.PAL['7'] : cfg.PAL['A'];
+      ctx.fillRect(gx + 2, gy + 12, 28, 8);
+      uiArt.drawMicroText(ctx, 'GYM ^', gx + 16, gy + 14, cfg.PAL['0'], { align: 'center' });
+    }
+
+    // Draw mini laptops on tables during Stage 1 exploration
+    if (!state.flags.gymUnlocked && state.laptops.player !== 'nova' && state.laptops.rival !== 'nova') {
       drawMiniSprite(ctx, 'spr_mini_nova', 9, 6);
       // Animated fancy RGB screen glint + blinking -30% promo tag above NOVA X
       const mx = 9 * cfg.TILE - camera.x;
@@ -155,7 +204,7 @@ export const StoreScene = {
       ctx.fillRect(mx, my + 10, 16, 7);
       uiArt.drawMiniText(ctx, '30%', mx + 1, my + 11, cfg.PAL['7']);
     }
-    if (state.laptops.player !== 'aura_go' && state.laptops.rival !== 'aura_go') {
+    if (!state.flags.gymUnlocked && state.laptops.player !== 'aura_go' && state.laptops.rival !== 'aura_go') {
       drawMiniSprite(ctx, 'spr_mini_aura', 10, 6);
     }
 
@@ -170,13 +219,13 @@ export const StoreScene = {
     // Dialogue / script
     dialogueUI.draw(ctx);
 
-    // Toast (placed high so it doesn't collide with dialogue box)
+    // Toast (placed high normally, or low at ty=120 when north Gym door is unlocked so door stays clear)
     if (toastTimer > 0 && !dialogueUI.isActive && !laptopCardShowing) {
       const maxChars = Math.max(...toastLines.map(l => l.length));
       const tw = maxChars * 5 + 16;
       const th = toastLines.length * 10 + 10;
       const tx = Math.floor((240 - tw) / 2);
-      const ty = 12;
+      const ty = state.flags.gymUnlocked ? 120 : 12;
       ctx.fillStyle = cfg.PAL['0'];
       ctx.fillRect(tx, ty, tw, th);
       uiArt.drawRectOutline(ctx, tx, ty, tw, th, cfg.PAL['7'], 1);
@@ -227,6 +276,11 @@ function handleInteraction() {
   // NPC interactions
   const targetEntity = entityManager.entities.find(e => e.col === targetCol && e.row === targetRow && e.visible);
   if (targetEntity) {
+    if (targetEntity.id === 'guide' && state.flags.gymUnlocked) {
+      targetEntity.face(oppositeDir(player.dir));
+      dialogueUI.show([D.G22_GYM]);
+      return;
+    }
     if (targetEntity.id === 'guide' && state.flags.guideMet) {
       targetEntity.face(oppositeDir(player.dir));
       dialogueUI.show([D.G4]); // Repeat last line
@@ -277,8 +331,27 @@ function handleInteraction() {
       dialogueUI.show([{ speaker: '', text: 'A very healthy plant.' }]);
       break;
     case 'door':
-      showToast('Not yet! Pick a partner.', 2000);
+      showToast(state.flags.gymUnlocked ? 'Walk NORTH to enter PRO GYM!' : 'Not yet! Pick a partner.', 2000);
       break;
+    case 'gym_door':
+      if (state.flags.gymUnlocked) {
+        enterGymRoom();
+      } else {
+        showToast('PRO GYM: Complete PC-DEX first!', 2200);
+      }
+      break;
+  }
+}
+
+function enterGymRoom() {
+  if (transitioningToGym) return;
+  transitioningToGym = true;
+  if (window.CQ) {
+    window.CQ.audio.playSfx('sfx_confirm');
+    window.CQ.fx.wipeOut(cfg.WIPE_MS).then(() => {
+      window.CQ.sceneManager.switchTo('GYM');
+      window.CQ.fx.wipeIn(cfg.WIPE_MS);
+    });
   }
 }
 

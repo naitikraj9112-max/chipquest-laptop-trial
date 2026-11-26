@@ -13,6 +13,12 @@ export function createInitialState() {
       b2Winner: null,
       b2PlayerBatt: null,
       b2Turns: null,
+      gymUnlocked: false,
+      gymEntered: false,
+      b3Winner: null,
+      b3PlayerBatt: null,
+      b3Turns: null,
+      gymBadgeShown: false,
     },
     laptops: {
       player: null,

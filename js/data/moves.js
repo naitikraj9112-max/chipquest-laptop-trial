@@ -23,12 +23,21 @@ export const personaMoveLabels = {
   gamer:   { M1: 'AI HIGHLIGHT', M2: 'TRANSLATE', M3: 'BOOST FPS', M4: 'SAVE REPLAY' },
 };
 
-// Rival scripts (section 8.4, 8.5)
+// Gym BATTLE3 moves (Real Intel Core Ultra Series 3 vs AMD Ryzen AI Championship)
+export const gymMoveLabels = {
+  student: { M1: 'OPENVINO LLM', M2: 'LIVE NOTES',  M3: 'XE3 SLIDES',  M4: '75WH RUN' },
+  creator: { M1: 'LOCAL AI',     M2: 'RAW DENOISE', M3: 'ARC B390 4K', M4: 'MULTI-EXPORT' },
+  gamer:   { M1: 'XESS AI',      M2: 'AUTO CLIP',   M3: 'XE3 ULTRA',   M4: 'STREAM ENC' },
+};
+
+// Rival scripts (section 8.4, 8.5 + Gym Stage 2)
 export const rivalScripts = {
   // BATTLE1 main path: rival is GO
   battle1_main: ['M1', 'M2', 'M4', 'M3', 'M1', 'M2'],
   // BATTLE1 fork path: rival is LEGACY
   battle1_fork: ['M3', 'M1', 'M2', 'M4'],
-  // BATTLE2: rival is GO
+  // BATTLE2: rival is GO (fake laptop fight)
   battle2: ['M1', 'M2', 'M1', 'M3', 'M2', 'M4'],
+  // BATTLE3: Gym Championship rival is AMD Ryzen AI
+  battle3: ['M1', 'M2', 'M1', 'M3', 'M2', 'M4'],
 };

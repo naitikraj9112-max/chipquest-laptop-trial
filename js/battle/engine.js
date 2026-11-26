@@ -1,13 +1,13 @@
 // js/battle/engine.js — Deterministic battle engine (section 8)
 import { cfg } from '../config.js';
 import { laptops, getStage2Pair } from '../data/laptops.js';
-import { battle1Moves, battle2Moves, personaMoveLabels, rivalScripts } from '../data/moves.js';
+import { battle1Moves, battle2Moves, personaMoveLabels, gymMoveLabels, rivalScripts } from '../data/moves.js';
 import { bus } from '../core/bus.js';
 import { state } from '../core/state.js';
 
 export class BattleEngine {
   constructor(battleId) {
-    this.battleId = battleId; // 'BATTLE1' or 'BATTLE2'
+    this.battleId = battleId; // 'BATTLE1', 'BATTLE2', or 'BATTLE3'
     this.turn = 0;
     this.phase = 'player_choose'; // player_choose, animating, rival_act, turn_end, battle_over
     this.winner = null; // 'player' | 'rival'
@@ -19,10 +19,17 @@ export class BattleEngine {
       this.rivalLaptopId = state.laptops.rival;
       this.moves = battle1Moves;
       this.startBatt = 40;
+    } else if (battleId === 'BATTLE2') {
+      // Restored fake Stage 1 rematch: AURA PRO vs AURA GO
+      this.playerLaptopId = 'aura_pro';
+      this.rivalLaptopId = 'aura_go';
+      this.moves = battle2Moves;
+      this.startBatt = 50;
     } else {
+      // BATTLE3: Stage 2 Pokemon Gym Championship — Real Intel OEM vs Real AMD OEM
       const pair = getStage2Pair(state.flags.persona || 'student');
-      this.playerLaptopId = (laptops[state.laptops.player]?.profile === 'PRO') ? state.laptops.player : pair.player;
-      this.rivalLaptopId = (laptops[state.laptops.rival]?.profile === 'COMP_AMD') ? state.laptops.rival : pair.rival;
+      this.playerLaptopId = (laptops[state.laptops.gymPlayer]?.profile === 'PRO') ? state.laptops.gymPlayer : pair.player;
+      this.rivalLaptopId = (laptops[state.laptops.gymRival]?.profile === 'COMP_AMD') ? state.laptops.gymRival : pair.rival;
       this.moves = battle2Moves;
       this.startBatt = 50;
     }
@@ -36,15 +43,11 @@ export class BattleEngine {
 
     // Rival script
     if (battleId === 'BATTLE1') {
-      if (state.flags.starter === 'nova') {
-        // Main path: rival is GO
-        this.rivalScript = rivalScripts.battle1_main;
-      } else {
-        // Fork path: rival is LEGACY
-        this.rivalScript = rivalScripts.battle1_fork;
-      }
-    } else {
+      this.rivalScript = state.flags.starter === 'nova' ? rivalScripts.battle1_main : rivalScripts.battle1_fork;
+    } else if (battleId === 'BATTLE2') {
       this.rivalScript = rivalScripts.battle2;
+    } else {
+      this.rivalScript = rivalScripts.battle3;
     }
 
     this.rivalMoveIndex = 0;
@@ -63,10 +66,12 @@ export class BattleEngine {
         M3: battle1Moves.M3.label,
         M4: battle1Moves.M4.label,
       };
-    } else {
-      const persona = state.flags.persona || 'student';
-      return personaMoveLabels[persona];
     }
+    const persona = state.flags.persona || 'student';
+    if (this.battleId === 'BATTLE3') {
+      return gymMoveLabels[persona];
+    }
+    return personaMoveLabels[persona];
   }
 
   getPlayerMoves() {
@@ -207,8 +212,13 @@ export class BattleEngine {
       this.winReason = 'complete';
       this.phase = 'battle_over';
       bus.emit('battle:event', { t: 'COMPLETE', who: 'player' });
-      state.flags.b2PlayerBatt = this.player.batt;
-      state.flags.b2Turns = this.turn + 1;
+      if (this.battleId === 'BATTLE3') {
+        state.flags.b3PlayerBatt = this.player.batt;
+        state.flags.b3Turns = this.turn + 1;
+      } else if (this.battleId === 'BATTLE2') {
+        state.flags.b2PlayerBatt = this.player.batt;
+        state.flags.b2Turns = this.turn + 1;
+      }
       return result;
     }
     if (result.fainted) {
@@ -272,8 +282,8 @@ export class BattleEngine {
     this.rival.heat = Math.max(0, this.rival.heat - 5);
     this.turn++;
 
-    // BATTLE2 turn 3: wifi drop event (section 8.3 rule 7)
-    if (this.battleId === 'BATTLE2' && this.turn === 3 && !this.wifiDropTriggered) {
+    // BATTLE2 or BATTLE3 turn 3: wifi drop event
+    if ((this.battleId === 'BATTLE2' || this.battleId === 'BATTLE3') && this.turn === 3 && !this.wifiDropTriggered) {
       this.wifiDropTriggered = true;
       bus.emit('battle:event', { t: 'EVENT', event: 'wifi_drop' });
       return 'wifi_drop';

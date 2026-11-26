@@ -6,7 +6,6 @@ import { dialogueUI } from '../world/dialogue.js';
 import { scriptRunner } from '../world/scriptRunner.js';
 import { uiArt } from '../art/ui.js';
 import { dialogue as D } from '../data/dialogue.js';
-import { getStage2Pair } from '../data/laptops.js';
 
 let selectedIndex = 0;
 let phase = 'prompt'; // prompt, choose, chosen, transitioning
@@ -149,19 +148,29 @@ function selectPersona(personaId) {
 
   if (window.CQ) window.CQ.audio.playSfx('sfx_confirm');
 
-  // Lock Stage 2 Intel OEM pick vs AMD direct rival pair for PC-DEX
-  const pair = getStage2Pair(personaId);
-  state.laptops.player = pair.player;
-  state.laptops.rival = pair.rival;
-
+  // Determine follow-up dialogue (restored fake Stage 1 BATTLE2: AURA PRO vs AURA GO)
   const g14Key = personaId === 'student' ? 'G14s' : personaId === 'creator' ? 'G14c' : 'G14g';
+  const b2Key = personaId === 'student' ? 'B2s' : personaId === 'creator' ? 'B2c' : 'B2g';
 
-  dialogueUI.show([D[g14Key]], () => {
+  const isForkPath = state.flags.starter === 'aura_go';
+
+  const pages = [D[g14Key]];
+
+  if (isForkPath) {
+    state.laptops.rival = 'aura_go';
+    pages.push(D.Gf1);
+  }
+
+  state.laptops.player = 'aura_pro';
+  pages.push(D.G15);
+  pages.push(D.R5);
+  pages.push(D[b2Key]);
+
+  dialogueUI.show(pages, () => {
     phase = 'transitioning';
-    // Stage 2: Transition to PC-DEX so PC-DEX chooses & presents our Intel laptop vs AMD competitor
     if (window.CQ) {
       window.CQ.fx.wipeOut(cfg.WIPE_MS).then(() => {
-        window.CQ.sceneManager.switchTo('PCDEX');
+        window.CQ.sceneManager.switchTo('BATTLE2', { battleId: 'BATTLE2' });
         window.CQ.fx.wipeIn(cfg.WIPE_MS);
       });
     }

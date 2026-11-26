@@ -43,8 +43,8 @@ export const cfg = {
     VIOLET: '#7B2FF7', PINK: '#FF4FB0', WOOD: '#8B5A2B', SAND: '#D9B38C'
   },
 
-  // Scene IDs (section 3.6)
-  SCENES: ['TITLE', 'INTRO', 'STORE', 'BATTLE1', 'PERSONA', 'PCDEX', 'BATTLE2', 'RESULT'],
+  // Scene IDs (section 3.6 + Gym Stage 2)
+  SCENES: ['TITLE', 'INTRO', 'STORE', 'BATTLE1', 'PERSONA', 'BATTLE2', 'PCDEX', 'GYM', 'BATTLE3', 'RESULT'],
 
   // Laptop IDs
   LAPTOPS: [
@@ -67,7 +67,7 @@ export const cfg = {
   FACINGS: ['down', 'up', 'left'],
 
   // Music IDs
-  MUSIC_IDS: ['MUS_TITLE', 'MUS_STORE', 'MUS_RIVAL', 'MUS_BATTLE1', 'MUS_BATTLE2', 'MUS_WIN', 'MUS_LOSE', 'MUS_RESULT'],
+  MUSIC_IDS: ['MUS_TITLE', 'MUS_STORE', 'MUS_RIVAL', 'MUS_BATTLE1', 'MUS_BATTLE2', 'MUS_GYM', 'MUS_GYM_BATTLE', 'MUS_WIN', 'MUS_LOSE', 'MUS_RESULT'],
 
   // SFX IDs
   SFX_IDS: ['sfx_blip', 'sfx_confirm', 'sfx_cancel', 'sfx_step', 'sfx_start', 'sfx_card', 'sfx_super', 'sfx_ok', 'sfx_weak', 'sfx_heat', 'sfx_warn', 'sfx_shutdown', 'sfx_complete', 'sfx_wifi_drop'],

@@ -25,8 +25,8 @@ export class BattleUI {
     this.wifiDropBanner = false;
     this.wifiDropTimer = 0;
 
-    // Battle-specific bg colors
-    this.bgStyle = battleId === 'BATTLE1' ? 'battle1' : 'battle2';
+    // Battle-specific bg colors (battle1: orange, battle2: blue grid, battle3: Pokemon Gym arena)
+    this.bgStyle = battleId === 'BATTLE1' ? 'battle1' : battleId === 'BATTLE3' ? 'battle3' : 'battle2';
   }
 
   queueMessage(text, autoAdvance = true, tag = null) {
@@ -188,6 +188,42 @@ export class BattleUI {
           ctx.fillRect(x - 1, y - 1, 3, 3);
         }
       }
+    }
+    if (this.bgStyle === 'battle3') {
+      // Championship Pokemon-Gym Stadium: deep royal arena floor, gold borders & spotlight battle pads
+      ctx.fillStyle = cfg.PAL['0'];
+      ctx.fillRect(0, 0, cfg.LOGICAL_W, 112);
+
+      // Perspective gold horizontal stadium lines in upper arena
+      ctx.fillStyle = cfg.PAL['1'];
+      ctx.fillRect(0, 24, cfg.LOGICAL_W, 88);
+      ctx.fillStyle = cfg.PAL['2'];
+      ctx.fillRect(0, 48, cfg.LOGICAL_W, 2);
+      ctx.fillRect(0, 74, cfg.LOGICAL_W, 2);
+
+      // Vertical stadium beam dividers
+      for (let x = 20; x < cfg.LOGICAL_W; x += 40) {
+        ctx.fillStyle = cfg.PAL['1'];
+        ctx.fillRect(x, 0, 2, 112);
+      }
+
+      // Championship gold arena border & GYM emblem
+      uiArt.drawRectOutline(ctx, 1, 1, cfg.LOGICAL_W - 2, 110, cfg.PAL['7'], 2);
+
+      // Classic Pokemon-Gym circular battle platforms under Rival (174, 8) and Player (20, 62)
+      // Rival platform (top-right)
+      ctx.fillStyle = cfg.PAL['5'];
+      ctx.fillRect(164, 34, 68, 12);
+      uiArt.drawRectOutline(ctx, 164, 34, 68, 12, cfg.PAL['7'], 1);
+      // Player platform (bottom-left)
+      ctx.fillStyle = cfg.PAL['B'];
+      ctx.fillRect(10, 88, 68, 12);
+      uiArt.drawRectOutline(ctx, 10, 88, 68, 12, cfg.PAL['7'], 1);
+
+      // Top-right Gym Championship badge pill between rival sprite and edge
+      ctx.fillStyle = cfg.PAL['7'];
+      ctx.fillRect(134, 3, 36, 9);
+      uiArt.drawMicroText(ctx, 'PRO GYM', 152, 5, cfg.PAL['0'], { align: 'center' });
     }
   }
 

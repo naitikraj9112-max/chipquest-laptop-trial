@@ -121,10 +121,10 @@ export const ResultScene = {
     }
 
     // Class, Won vs AMD Rival & Stats (crisp 3x5 micro font fits cleanly above QR y=44)
-    const batt = state.flags.b2PlayerBatt ?? 20;
-    const turns = state.flags.b2Turns ?? 5;
+    const batt = state.flags.b3PlayerBatt ?? state.flags.b2PlayerBatt ?? 20;
+    const turns = state.flags.b3Turns ?? state.flags.b2Turns ?? 5;
     uiArt.drawMicroText(ctx, `CLASS: ${persona.toUpperCase()}  (BATT:${batt}% T:${turns})`, lx + 20, py + 18, cfg.PAL['0']);
-    uiArt.drawMicroText(ctx, `WON: ${rec.partnerLabel}`, lx + 20, py + 25, cfg.PAL['B']);
+    uiArt.drawMicroText(ctx, `GYM WIN: ${rec.partnerLabel}`, lx + 20, py + 25, cfg.PAL['B']);
     uiArt.drawMicroText(ctx, `BEAT: ${beatLap ? (beatLap.shortOem || beatLap.oemName) : 'AMD RYZEN AI'}`, lx + 20, py + 32, cfg.PAL['5']);
 
     // Yellow highlight divider left of QR

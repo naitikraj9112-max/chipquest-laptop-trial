@@ -6,10 +6,10 @@ export const camera = {
   x: 0,
   y: 0,
 
-  follow(entity) {
+  follow(entity, map = tilemap) {
     // Center camera on entity, clamped to map bounds
-    const mapW = tilemap.cols * cfg.TILE;
-    const mapH = tilemap.rows * cfg.TILE;
+    const mapW = map.cols * cfg.TILE;
+    const mapH = map.rows * cfg.TILE;
     
     let cx = entity.x + cfg.TILE / 2 - cfg.LOGICAL_W / 2;
     let cy = entity.y + cfg.TILE / 2 - cfg.LOGICAL_H / 2;

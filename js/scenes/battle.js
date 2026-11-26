@@ -33,13 +33,17 @@ export function createBattleScene(defaultBattleId) {
       battleOverTimer = 0;
 
       if (window.CQ) {
-        const musicId = battleId === 'BATTLE1' ? 'MUS_BATTLE1' : 'MUS_BATTLE2';
+        const musicId = battleId === 'BATTLE1'
+          ? 'MUS_BATTLE1'
+          : battleId === 'BATTLE3'
+            ? 'MUS_GYM_BATTLE'
+            : 'MUS_BATTLE2';
         window.CQ.audio.playMusic(musicId, { fadeMs: 300 });
       }
 
       // Show intro message
-      const introMsg = battleId === 'BATTLE2'
-        ? `STAGE 2! ${engine.playerLaptop.name} vs ${engine.rivalLaptop.name}!`
+      const introMsg = battleId === 'BATTLE3'
+        ? `GYM MATCH! ${engine.playerLaptop.name} vs ${engine.rivalLaptop.name}!`
         : D.BI1.text;
       ui.queueMessage(introMsg, true);
       ui.onMessagesDone = () => {
@@ -162,7 +166,11 @@ export function createBattleScene(defaultBattleId) {
         clearMusicTimer();
         musicTimer = setTimeout(() => window.CQ.audio.playMusic('MUS_WIN', { fadeMs: 100 }), 500);
       }
-      if (battleId === 'BATTLE2') {
+      if (battleId === 'BATTLE3') {
+        state.flags.b3Winner = 'player';
+        state.flags.b3PlayerBatt = engine.player.batt;
+        state.flags.b3Turns = engine.turn + 1;
+      } else if (battleId === 'BATTLE2') {
         state.flags.b2Winner = 'player';
         state.flags.b2PlayerBatt = engine.player.batt;
         state.flags.b2Turns = engine.turn + 1;
@@ -245,7 +253,11 @@ export function createBattleScene(defaultBattleId) {
         musicTimer = setTimeout(() => window.CQ.audio.playMusic('MUS_WIN', { fadeMs: 100 }), 800);
       }
       if (battleId === 'BATTLE1') state.flags.b1Winner = 'player';
-      else {
+      else if (battleId === 'BATTLE3') {
+        state.flags.b3Winner = 'player';
+        state.flags.b3PlayerBatt = engine.player.batt;
+        state.flags.b3Turns = engine.turn + 1;
+      } else {
         state.flags.b2Winner = 'player';
         state.flags.b2PlayerBatt = engine.player.batt;
         state.flags.b2Turns = engine.turn + 1;
@@ -288,15 +300,19 @@ export function createBattleScene(defaultBattleId) {
       if (battleId === 'BATTLE1') {
         window.CQ.sceneManager.switchTo('STORE');
         window.CQ.fx.wipeIn(cfg.WIPE_MS);
+      } else if (battleId === 'BATTLE3') {
+        // After Gym Match BATTLE3: return to GYM for post-victory sequence & Gym Badge!
+        window.CQ.sceneManager.switchTo('GYM', { postBattle3: true });
+        window.CQ.fx.wipeIn(cfg.WIPE_MS);
       } else {
-        // After BATTLE2: Stage 2 victory debrief R6, G17-G19, G21, G22 -> RESULT Trainer Card
+        // After fake BATTLE2: post-battle dialogue R6, G17-G20 -> PCDEX (section 7.4)
         phase = 'post_battle2';
         window.CQ.audio.playMusic('MUS_RESULT', { fadeMs: 300 });
-        const postPages = [D.R6, D.G17, D.G18, D.G19, D.G21, D.G22];
+        const postPages = [D.R6, D.G17, D.G18, D.G19, D.G20];
         dialogueUI.show(postPages, () => {
           phase = 'transitioning';
           window.CQ.fx.wipeOut(cfg.WIPE_MS).then(() => {
-            window.CQ.sceneManager.switchTo('RESULT');
+            window.CQ.sceneManager.switchTo('PCDEX');
             window.CQ.fx.wipeIn(cfg.WIPE_MS);
           });
         });
