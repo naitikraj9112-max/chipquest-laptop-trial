@@ -51,7 +51,7 @@ export const dialogue = {
   G14g: { speaker: 'PROF. CHIP', text: s('Gaming! You need smooth frames and cool temps.') },
 
   Gf1: { speaker: 'PROF. CHIP', text: s('ROHAN, take AURA GO for the rematch.') },
-  G15: { speaker: 'PROF. CHIP', text: s('Take AURA PRO: Intel Core Ultra with the Evo badge.') },
+  G15: { speaker: 'PROF. CHIP', text: s('Take AURA PRO: Core Ultra Series 3 (50 TOPS NPU, Evo)!') },
 
   R5: { speaker: 'ROHAN', text: s('Bring it! AURA GO never lets me down!') },
 
@@ -76,16 +76,16 @@ export const dialogue = {
   // Battle intro
   BI1: { speaker: 'system', text: s('ROHAN challenges you! Finish before battery dies!') },
 
-  // Store Intel Representatives (fit cleanly on 2 rows of 28 cols)
+  // Store Intel Representatives (real 2026 Intel Core Ultra Series 3 / Core Series 3 specs)
   REP1_1: { speaker: 'INTEL ALEX', text: s("Hi! I'm ALEX from Intel. Curious about Core Ultra?") },
-  REP1_2: { speaker: 'INTEL ALEX', text: s('Core Ultra Series 3 packs CPU, GPU and a 50 TOPS NPU!') },
-  REP1_3: { speaker: 'INTEL ALEX', text: s('The NPU runs everyday AI cool while saving battery.') },
+  REP1_2: { speaker: 'INTEL ALEX', text: s('Core Ultra Series 3 uses Intel 18A, up to 16 cores & NPU 5!') },
+  REP1_3: { speaker: 'INTEL ALEX', text: s('50 NPU TOPS + Arc B390 12 Xe3 run local AI cool & fast!') },
 
   REP2_1: { speaker: 'INTEL PRIYA', text: s("Hey! I'm PRIYA. Look for Core Ultra Evo badges here!") },
-  REP2_2: { speaker: 'INTEL PRIYA', text: s('Evo laptops are tested for battery and instant wake.') },
-  REP2_3: { speaker: 'INTEL PRIYA', text: s('On-device Core Ultra AI works offline, privately!') },
+  REP2_2: { speaker: 'INTEL PRIYA', text: s('ThinkPad X9-15p Aura & Acer TravelMate P6 run Series 3!') },
+  REP2_3: { speaker: 'INTEL PRIYA', text: s('On-device OpenVINO / WinML AI works offline, privately!') },
 
-  REP3_1: { speaker: 'INTEL SAM', text: s("Welcome! I'm SAM from Intel. Pick a Core Ultra tier!") },
-  REP3_2: { speaker: 'INTEL SAM', text: s('Core Ultra 5 gives great study stamina & offline AI.') },
-  REP3_3: { speaker: 'INTEL SAM', text: s('Core Ultra 7 & X boost creator AI and gaming speed!') },
+  REP3_1: { speaker: 'INTEL SAM', text: s("Welcome! I'm SAM from Intel. Pick your AI PC tier!") },
+  REP3_2: { speaker: 'INTEL SAM', text: s('Study: Yoga Slim 7 Ultra (Core Ultra) or Core 5 320 (17 TOPS).') },
+  REP3_3: { speaker: 'INTEL SAM', text: s('Create/Game: Ultra X9 388H (5.1GHz, Xe3) or 200HX + dGPU!') },
 };

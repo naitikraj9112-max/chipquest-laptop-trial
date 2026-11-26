@@ -65,11 +65,11 @@ export const IntroScene = {
       ctx.fillRect(wx + 2, 38, 4, 4);
     }
 
-    // Store sign
+    // Store sign (widened to frame RELIANCE DIGITAL cleanly)
     ctx.fillStyle = cfg.PAL['0'];
-    ctx.fillRect(46, 60, 148, 22);
+    ctx.fillRect(36, 60, 168, 22);
     ctx.fillStyle = cfg.PAL['4']; // WHITE
-    ctx.fillRect(48, 62, 144, 18);
+    ctx.fillRect(38, 62, 164, 18);
     ctx.font = '8px "Press Start 2P", monospace';
     ctx.fillStyle = cfg.PAL['B'];
     ctx.textBaseline = 'top';

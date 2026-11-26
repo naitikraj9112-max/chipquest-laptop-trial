@@ -140,6 +140,20 @@ export const StoreScene = {
     // Draw mini laptops on tables if not picked by player or rival (section 6)
     if (state.laptops.player !== 'nova' && state.laptops.rival !== 'nova') {
       drawMiniSprite(ctx, 'spr_mini_nova', 9, 6);
+      // Animated fancy RGB screen glint + blinking -30% promo tag above NOVA X
+      const mx = 9 * cfg.TILE - camera.x;
+      const my = 6 * cfg.TILE - camera.y;
+      const tickPhase = Math.floor(Date.now() / 180) % 4;
+      const rgbCols = ['A', 'D', '7', 'C'];
+      ctx.fillStyle = cfg.PAL[rgbCols[tickPhase]];
+      ctx.fillRect(mx + 4, my + 2, 4, 3);
+      ctx.fillStyle = cfg.PAL[rgbCols[(tickPhase + 2) % 4]];
+      ctx.fillRect(mx + 4, my + 7, 5, 1);
+      // Floating -30% retail placard on front edge of display table (doesn't overlap Prof. Chip at row 5)
+      const blink = Math.floor(Date.now() / 350) % 2 === 0;
+      ctx.fillStyle = blink ? cfg.PAL['5'] : cfg.PAL['6'];
+      ctx.fillRect(mx, my + 10, 16, 7);
+      uiArt.drawMiniText(ctx, '30%', mx + 1, my + 11, cfg.PAL['7']);
     }
     if (state.laptops.player !== 'aura_go' && state.laptops.rival !== 'aura_go') {
       drawMiniSprite(ctx, 'spr_mini_aura', 10, 6);
@@ -271,14 +285,14 @@ function handleInteraction() {
 function handleCardInput() {
   const click = input.consumeClick();
   if (click) {
-    // Panel 40..200, 32..128: right half / outside bottom-left = BACK if tapped on [B] LOOK AGAIN, left = TAKE IT
-    if (click.x >= 120 && click.y >= 106) {
+    // Panel 38..202, 28..130: bottom-right = LOOK AGAIN, left/panel = TAKE IT
+    if (click.x >= 114 && click.y >= 110) {
       laptopCardShowing = false;
       laptopCardId = null;
       if (window.CQ) window.CQ.audio.playSfx('sfx_cancel');
       return;
     }
-    if (click.x >= 40 && click.x <= 200 && click.y >= 32 && click.y <= 128) {
+    if (click.x >= 38 && click.x <= 202 && click.y >= 28 && click.y <= 130) {
       pickLaptop(laptopCardId);
       return;
     }
@@ -299,23 +313,49 @@ function drawLaptopCard(ctx, id) {
   const laptop = laptops[id];
   if (!laptop) return;
 
-  // Panel 160x96 centred at (40, 32) per section 7.3
-  const px = 40, py = 32, pw = 160, ph = 96;
+  // Panel 164x102 centred around (38, 28)
+  const px = 38, py = 28, pw = 164, ph = 102;
   ctx.fillStyle = cfg.PAL['4'];
   ctx.fillRect(px, py, pw, ph);
-  uiArt.drawRectOutline(ctx, px, py, pw, ph, cfg.PAL['B'], 2);
+  uiArt.drawRectOutline(ctx, px, py, pw, ph, id === 'nova' ? cfg.PAL['C'] : cfg.PAL['B'], 2);
 
   // Header
-  ctx.fillStyle = cfg.PAL['B'];
+  ctx.fillStyle = id === 'nova' ? cfg.PAL['C'] : cfg.PAL['B'];
   ctx.fillRect(px + 2, py + 2, pw - 4, 14);
   ctx.font = '8px "Press Start 2P", monospace';
   ctx.fillStyle = cfg.PAL['4'];
   ctx.textBaseline = 'top';
   ctx.fillText(laptop.name, px + 6, py + 5);
 
-  // Laptop sprite inside card right side (section 7.3)
+  if (id === 'nova') {
+    const blinkTag = Math.floor(Date.now() / 300) % 2 === 0;
+    ctx.fillStyle = blinkTag ? cfg.PAL['7'] : cfg.PAL['5'];
+    ctx.fillRect(px + 94, py + 4, 66, 10);
+    uiArt.drawMiniText(ctx, '+ FREE MERCH!', px + 96, py + 6, blinkTag ? cfg.PAL['0'] : cfg.PAL['4']);
+  }
+
+  // Laptop sprite inside card right side
+  const sx = px + 110;
+  const sy = py + 20;
   if (window.CQ && window.CQ.art) {
-    window.CQ.art.draw(ctx, `spr_laptop_${id}`, px + 108, py + 20);
+    window.CQ.art.draw(ctx, `spr_laptop_${id}`, sx, sy);
+  }
+
+  // Fancy animated RGB screen & keybed glow for NOVA X
+  if (id === 'nova') {
+    const phase = Math.floor(Date.now() / 160) % 4;
+    const cols = ['A', 'D', '7', 'C'];
+    // Equalizer bars animated inside laptop screen area (sx+8..sx+39, sy+5..sy+14)
+    for (let b = 0; b < 5; b++) {
+      const h = 3 + ((phase + b) % 4) * 2;
+      ctx.fillStyle = cfg.PAL[cols[(phase + b) % 4]];
+      ctx.fillRect(sx + 9 + b * 6, sy + 14 - h, 4, h);
+    }
+    // Animated RGB keyboard strip
+    for (let k = 0; k < 6; k++) {
+      ctx.fillStyle = cfg.PAL[cols[(phase + k) % 4]];
+      ctx.fillRect(sx + 5 + k * 5, sy + 20, 4, 1);
+    }
   }
 
   // Stats on left side using crisp 4x6 pixel font
@@ -325,7 +365,7 @@ function drawLaptopCard(ctx, id) {
     uiArt.drawMiniText(ctx, 'Price:', px + 6, py + 33, cfg.PAL['0']);
     ctx.fillStyle = cfg.PAL['5']; // RED tag
     ctx.fillRect(px + 37, py + 31, 49, 9);
-    uiArt.drawMiniText(ctx, 'SALE -20%', px + 39, py + 33, cfg.PAL['4']);
+    uiArt.drawMiniText(ctx, 'SALE -30%', px + 39, py + 33, cfg.PAL['4']);
   } else {
     uiArt.drawMiniText(ctx, `Price: ${laptop.priceTag}`, px + 6, py + 33, cfg.PAL['0']);
   }
@@ -333,14 +373,19 @@ function drawLaptopCard(ctx, id) {
   uiArt.drawMiniText(ctx, `Battery: ${laptop.battery}`, px + 6, py + 44, cfg.PAL['0']);
   uiArt.drawMiniText(ctx, `AI speed: ${laptop.aiSpeed}`, px + 6, py + 55, cfg.PAL['0']);
 
-  // Chip line
-  if (laptop.chipLine) {
+  // Offer badge or Intel chip line
+  if (id === 'nova') {
+    ctx.fillStyle = cfg.PAL['7'];
+    ctx.fillRect(px + 4, py + 65, pw - 8, 12);
+    uiArt.drawRectOutline(ctx, px + 4, py + 65, pw - 8, 12, cfg.PAL['5'], 1);
+    uiArt.drawMiniText(ctx, laptop.chipLine, px + Math.floor(pw / 2), py + 68, cfg.PAL['0'], { align: 'center' });
+  } else if (laptop.chipLine) {
     uiArt.drawMiniText(ctx, laptop.chipLine, px + 6, py + 68, cfg.PAL['B']);
   }
 
   // Choice line
   const cardPrompt = input.isTouch ? '[A] TAKE IT   [B] LOOK AGAIN' : '[Z] TAKE IT   [X] LOOK AGAIN';
-  uiArt.drawMiniText(ctx, cardPrompt, px + 6, py + 84, cfg.PAL['B']);
+  uiArt.drawMiniText(ctx, cardPrompt, px + 6, py + 87, cfg.PAL['B']);
 }
 
 function pickLaptop(id) {

@@ -252,6 +252,23 @@ export class BattleUI {
     const spriteId = `spr_laptop_${laptopId}`;
     if (window.CQ && window.CQ.art) {
       window.CQ.art.draw(ctx, spriteId, x + sx, y);
+      // Animate NOVA X's flashy RGB display while battery remains
+      if (laptopId === 'nova') {
+        const actor = this.engine.playerLaptopId === 'nova' ? this.engine.player : this.engine.rival;
+        if (actor && actor.batt > 0) {
+          const phase = Math.floor(Date.now() / 180) % 4;
+          const cols = ['A', 'D', '7', 'C'];
+          for (let b = 0; b < 5; b++) {
+            const h = 3 + ((phase + b) % 4) * 2;
+            ctx.fillStyle = cfg.PAL[cols[(phase + b) % 4]];
+            ctx.fillRect(x + sx + 9 + b * 6, y + 14 - h, 4, h);
+          }
+          for (let k = 0; k < 6; k++) {
+            ctx.fillStyle = cfg.PAL[cols[(phase + k) % 4]];
+            ctx.fillRect(x + sx + 5 + k * 5, y + 20, 4, 1);
+          }
+        }
+      }
     } else {
       // Fallback colored rect
       const colors = { nova: cfg.PAL['C'], aura_go: cfg.PAL['2'], aura_pro: cfg.PAL['1'] };

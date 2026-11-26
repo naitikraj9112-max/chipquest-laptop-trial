@@ -39,33 +39,33 @@ html, body {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 140px;
+  height: 112px;
   justify-content: space-between;
   align-items: flex-end;
-  padding: 10px 20px;
+  padding: 8px 14px;
   pointer-events: none;
   z-index: 100;
 }
 
 #dpad {
   position: relative;
-  width: 120px;
-  height: 120px;
+  width: 96px;
+  height: 96px;
   pointer-events: auto;
 }
 
 .dpad-btn {
   position: absolute;
-  width: 40px;
-  height: 40px;
-  background: rgba(244, 244, 250, 0.3);
-  border: 2px solid rgba(244, 244, 250, 0.5);
+  width: 32px;
+  height: 32px;
+  background: rgba(244, 244, 250, 0.25);
+  border: 2px solid rgba(244, 244, 250, 0.45);
   border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
-  color: rgba(244, 244, 250, 0.8);
+  font-size: 13px;
+  color: rgba(244, 244, 250, 0.85);
   pointer-events: auto;
   touch-action: none;
 }
@@ -74,39 +74,39 @@ html, body {
   background: rgba(244, 244, 250, 0.5);
 }
 
-.dpad-up { top: 0; left: 40px; }
-.dpad-down { bottom: 0; left: 40px; }
-.dpad-left { top: 40px; left: 0; }
-.dpad-right { top: 40px; right: 0; }
+.dpad-up { top: 0; left: 32px; }
+.dpad-down { bottom: 0; left: 32px; }
+.dpad-left { top: 32px; left: 0; }
+.dpad-right { top: 32px; right: 0; }
 
 /* Center of D-pad */
 .dpad-center {
   position: absolute;
-  width: 40px;
-  height: 40px;
-  top: 40px;
-  left: 40px;
-  background: rgba(244, 244, 250, 0.1);
+  width: 32px;
+  height: 32px;
+  top: 32px;
+  left: 32px;
+  background: rgba(244, 244, 250, 0.08);
   border-radius: 4px;
 }
 
 .action-buttons {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   align-items: flex-end;
   pointer-events: auto;
 }
 
 .action-btn {
-  width: 50px;
-  height: 50px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  border: 2px solid rgba(244, 244, 250, 0.5);
+  border: 2px solid rgba(244, 244, 250, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: 'Press Start 2P', monospace;
-  font-size: 14px;
+  font-size: 12px;
   color: rgba(244, 244, 250, 0.9);
   pointer-events: auto;
   touch-action: none;
@@ -117,15 +117,15 @@ html, body {
 }
 
 #btn-a {
-  background: rgba(0, 113, 197, 0.5); /* BLUE */
+  background: rgba(0, 113, 197, 0.45); /* BLUE */
 }
 
 #btn-b {
   background: rgba(230, 57, 70, 0.4); /* RED */
-  width: 40px;
-  height: 40px;
-  font-size: 12px;
-  margin-bottom: 5px;
+  width: 36px;
+  height: 36px;
+  font-size: 11px;
+  margin-bottom: 4px;
 }
 
 /* Mute button (section 3.3) */

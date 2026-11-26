@@ -13,7 +13,7 @@ export const cfg = {
   BATTLE_MSG_MS: 800,
   WIPE_MS: 600,
   IDLE_RESET_S: 60,
-  STORE_NAME: 'BIG DIGITAL',
+  STORE_NAME: 'RELIANCE DIGITAL',
   NEXT_STEP_URL: 'https://www.intel.com/content/www/us/en/products/evo.html',
   
   // Palette (16 colours, section 3.5)

@@ -34,6 +34,7 @@ export const loop = {
 
     resize();
     window.addEventListener('resize', resize);
+    window.addEventListener('touchstart', resize, { once: true });
 
     // Pause when hidden (section 12)
     document.addEventListener('visibilitychange', () => {
@@ -46,6 +47,8 @@ export const loop = {
       }
     });
   },
+
+  resize,
 
   start() {
     running = true;
@@ -61,12 +64,15 @@ export const loop = {
 function resize() {
   const w = window.innerWidth;
   const h = window.innerHeight;
-  scale = Math.max(1, Math.floor(Math.min(w / cfg.LOGICAL_W, h / cfg.LOGICAL_H)));
-  const sw = cfg.LOGICAL_W * scale;
-  const sh = cfg.LOGICAL_H * scale;
+  const isTouchLike = input.isTouch || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+  const rawScale = Math.min(w / cfg.LOGICAL_W, h / cfg.LOGICAL_H);
+  // On touch/phone screens, fit screen tightly while preserving exact 3:2 (240x160) aspect ratio
+  scale = isTouchLike ? Math.max(1, rawScale) : Math.max(1, Math.floor(rawScale));
+  const sw = Math.floor(cfg.LOGICAL_W * scale);
+  const sh = Math.floor(cfg.LOGICAL_H * scale);
   offsetX = Math.floor((w - sw) / 2);
   offsetY = Math.floor((h - sh) / 2);
-  
+
   canvas.style.width = sw + 'px';
   canvas.style.height = sh + 'px';
   canvas.style.left = offsetX + 'px';

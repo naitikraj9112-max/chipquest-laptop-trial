@@ -10,53 +10,83 @@ let phase = 'cards'; // cards, banner, done, transitioning
 
 const cards = [
   {
-    title: 'INTEL CORE ULTRA',
+    title: 'CORE ULTRA X9 SER.3',
     color: cfg.PAL['B'],
     rows: [
-      'AI engines: CPU+GPU+NPU',
-      'NPU: up to 50 TOPS',
-      'Runs Windows apps natively',
-      'Evo = tested battery+wake',
+      'EX: ThinkPad X9-15p Aura / Yoga Slim 7',
+      'Ultra X9 388H: 16C, 5.1GHz, 18A',
+      'NPU 5: 50 TOPS | Arc B390 12 Xe3',
+      'LPDDR5X-9600 | Up to 180 plat. TOPS',
+    ]
+  },
+  {
+    title: 'CORE ULTRA 7/5 SER.3',
+    color: cfg.PAL['B'],
+    rows: [
+      'EX: Acer TravelMate P6 / Swift Spin',
+      'Ultra 7 355 / 5 338H (8-12C, 4.7GHz)',
+      'NPU 5: 47-49 TOPS | Arc B370 / Xe3',
+      'Intel 18A, vPro & Evo battery+wake',
+    ]
+  },
+  {
+    title: 'CORE SERIES 3 (ENTRY)',
+    color: cfg.PAL['9'],
+    rows: [
+      'EX: Acer Swift Air 14 / Vivobook 15',
+      'Core 7 350 / 5 320 (6C, up to 4.8GHz)',
+      'NPU 5: 17 TOPS (40 plat. TOPS), 2 Xe3',
+      '10-28W, Wi-Fi 7, TB4 everyday AI',
+    ]
+  },
+  {
+    title: 'CORE ULTRA 200V / H',
+    color: cfg.PAL['B'],
+    rows: [
+      'EX: ThinkPad P1 Gen 8 / 200V Aura Ed.',
+      '200V: 8C, Arc 140V Xe2, 48 NPU TOPS',
+      '200HX: up to 24C, 5.5GHz + dGPU',
+      'LP5X-8533 in-pkg (200V) / DDR5 (H/HX)',
     ]
   },
   {
     title: 'AMD RYZEN AI',
     color: cfg.PAL['5'],
     rows: [
-      'Also has an NPU',
-      'Compare real battery tests',
-      'Runs Windows apps natively',
-      'Check the model, not logo',
+      'Also includes a dedicated NPU',
+      'Compare real battery tests by model',
+      'Runs x86 Windows apps natively',
+      'Check exact SKU, not just badge',
     ]
   },
   {
     title: 'QUALCOMM SNAPDRAGON X',
     color: cfg.PAL['6'],
     rows: [
-      'Also has an NPU',
-      'Efficient Arm-based chip',
+      'Also includes an AI NPU',
+      'Efficient Arm-based laptop chip',
       'Some apps run via emulation',
-      'Check your must-have apps',
+      'Check your must-have apps & games',
     ]
   },
   {
     title: 'APPLE MAC',
     color: cfg.PAL['2'],
     rows: [
-      'Own Neural Engine for AI',
+      'Own Neural Engine for local AI',
       'Runs macOS, not Windows',
-      'Check college & game apps',
-      'Often a higher price',
+      'Check college & gaming app needs',
+      'Often comes at a higher price tier',
     ]
   },
   {
     title: 'NO-AI LAPTOP',
     color: cfg.PAL['1'],
     rows: [
-      'No NPU (AI engine)',
-      'AI runs on the main chip',
-      'More battery use & heat',
-      'Often the lowest price',
+      'No dedicated NPU engine',
+      'AI workloads run on main CPU/GPU',
+      'More battery drain & higher heat',
+      'Lowest upfront tag, shorter runway',
     ]
   },
 ];

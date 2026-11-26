@@ -7,26 +7,44 @@ import { uiArt } from '../art/ui.js';
 const recommendations = {
   student: {
     title: 'STUDENT PICK',
+    oem: 'Lenovo Yoga Slim 7 Ultra 14',
+    partnerLabel: 'Yoga Slim 7 Ultra 14',
     lines: [
-      'Core Ultra 5 or higher',
-      'Evo badge, 16GB RAM+',
-      'Long battery, offline AI',
+      'CPU: Core Ultra 5 325 / 7 355',
+      '8C 4.7GHz, 47-49 TOPS NPU 5',
+      'Intel 18A, LP5X, Evo tested',
+    ],
+    budget: [
+      'Budget: Acer Swift Air 14',
+      'Core 5 320 (6C, 17 NPU TOPS)',
     ]
   },
   creator: {
     title: 'CREATOR PICK',
+    oem: 'ThinkPad X9-15p Aura Ed.',
+    partnerLabel: 'ThinkPad X9-15p Aura',
     lines: [
-      'Core Ultra 7 or higher',
-      'Evo badge, 16GB RAM+, SSD',
-      'More AI + graphics power',
+      'Core Ultra X9 388H / X7 368H',
+      '16C 5.1GHz, 18MB, 50 TOPS NPU',
+      'Arc B390 12 Xe3, LP5X-9600',
+    ],
+    budget: [
+      'Budget: ASUS ExpertBook B3 G2',
+      'Core 7 350 (6C, 17 NPU TOPS)',
     ]
   },
   gamer: {
     title: 'GAMER PICK',
+    oem: 'Lenovo IdeaPad Pro 5 16',
+    partnerLabel: 'Lenovo IdeaPad Pro 5',
     lines: [
-      'Core Ultra X-series',
-      'Strongest Intel graphics',
-      'Evo badge, 16GB RAM+',
+      'Ultra X9 388H / 9 285HX + dGPU',
+      '16-24C, Arc B390, 50 TOPS NPU',
+      'Up to 180 plat. TOPS, dGPU/Xe3',
+    ],
+    budget: [
+      'Budget: ASUS Vivobook 15 X1504',
+      'Core 5 320 / 7 350 (17 TOPS)',
     ]
   }
 };
@@ -99,31 +117,31 @@ export const ResultScene = {
       }
     }
 
-    // Class & partner stats (crisp 4x6 pixel font)
-    uiArt.drawMiniText(ctx, `CLASS: ${persona.toUpperCase()}`, lx + 20, py + 19, cfg.PAL['0']);
-    uiArt.drawMiniText(ctx, 'PARTNER: AURA PRO', lx + 20, py + 28, cfg.PAL['0']);
+    // Class & Real OEM Partner stats (rows 26 & 34 span full width above QR y=44!)
+    uiArt.drawMiniText(ctx, `CLASS: ${persona.toUpperCase()}`, lx + 20, py + 18, cfg.PAL['0']);
+    uiArt.drawMiniText(ctx, `PARTNER: ${rec.partnerLabel}`, lx + 20, py + 26, cfg.PAL['B']);
 
     const batt = state.flags.b2PlayerBatt ?? 38;
     const turns = state.flags.b2Turns ?? 5;
-    uiArt.drawMiniText(ctx, `BATTERY LEFT: ${batt}%`, lx, py + 38, cfg.PAL['0']);
-    uiArt.drawMiniText(ctx, `TURNS: ${turns}`, lx, py + 47, cfg.PAL['0']);
+    uiArt.drawMiniText(ctx, `BATTERY: ${batt}%   TURNS: ${turns}`, lx, py + 36, cfg.PAL['0']);
 
     // Yellow highlight divider left of QR
     ctx.fillStyle = cfg.PAL['7'];
-    ctx.fillRect(lx, py + 55, 144, 2);
+    ctx.fillRect(lx, py + 44, 144, 2);
 
-    // Recommendation block (8px crisp Press Start 2P header + 4x6 crisp lines)
+    // Recommendation block (8px crisp Press Start 2P header + real OEM & CPU specs)
     ctx.font = '8px "Press Start 2P", monospace';
     ctx.fillStyle = cfg.PAL['B'];
-    ctx.fillText(rec.title, lx, py + 60);
+    ctx.fillText(rec.title, lx, py + 49);
 
+    uiArt.drawMiniText(ctx, rec.oem, lx, py + 60, cfg.PAL['B']);
     for (let i = 0; i < rec.lines.length; i++) {
-      uiArt.drawMiniText(ctx, rec.lines[i], lx, py + 72 + i * 8, cfg.PAL['0']);
+      uiArt.drawMiniText(ctx, rec.lines[i], lx, py + 69 + i * 8, cfg.PAL['0']);
     }
 
-    // Budget line (left column)
-    uiArt.drawMiniText(ctx, 'Tight budget? Ask about', lx, py + 99, cfg.PAL['2']);
-    uiArt.drawMiniText(ctx, 'Core Series 3 (AI-ready).', lx, py + 107, cfg.PAL['2']);
+    // Budget OEM pick (left column)
+    uiArt.drawMiniText(ctx, rec.budget[0], lx, py + 97, cfg.PAL['2']);
+    uiArt.drawMiniText(ctx, rec.budget[1], lx, py + 105, cfg.PAL['2']);
 
     // QR 56x56 at (168, 44) per section 9.3 with crisp INK border
     const qx = 168, qy = 44;
@@ -143,13 +161,14 @@ export const ResultScene = {
     ctx.fillStyle = cfg.PAL['B'];
     ctx.fillRect(px + 2, py + ph - 26, pw - 4, 24);
 
-    uiArt.drawMiniText(ctx, 'NEXT: Ask staff to demo it', px + pw / 2, py + ph - 24, cfg.PAL['7'], { align: 'center' });
-    uiArt.drawMiniText(ctx, 'Game values are illustrative.', px + pw / 2, py + ph - 16, cfg.PAL['4'], { align: 'center' });
-    uiArt.drawMiniText(ctx, 'Real battery/speed vary by PC.', px + pw / 2, py + ph - 9, cfg.PAL['4'], { align: 'center' });
+    uiArt.drawMiniText(ctx, 'NEXT: Ask Reliance Digital staff to demo', px + pw / 2, py + ph - 24, cfg.PAL['7'], { align: 'center' });
+    uiArt.drawMiniText(ctx, 'Game values illustrative. Verify OEM SKU.', px + pw / 2, py + ph - 16, cfg.PAL['4'], { align: 'center' });
+    uiArt.drawMiniText(ctx, 'Real battery & TOPS vary by configuration.', px + pw / 2, py + ph - 9, cfg.PAL['4'], { align: 'center' });
 
     // Tap to restart hint (y = 153)
     if (Math.floor(timer / 600) % 2 === 0) {
-      uiArt.drawMiniText(ctx, '[TAP TO RESTART]', 120, 153, cfg.PAL['4'], { align: 'center' });
+      const restartMsg = input.isTouch ? '[TAP TO RESTART]' : '[PRESS Z OR CLICK TO RESTART]';
+      uiArt.drawMiniText(ctx, restartMsg, 120, 153, cfg.PAL['4'], { align: 'center' });
     }
   },
 
