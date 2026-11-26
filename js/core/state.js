@@ -3,6 +3,7 @@
 export function createInitialState() {
   return {
     scene: 'TITLE',
+    playerName: 'ASH',
     player: { x: 9, y: 12, dir: 'up' },
     canLeave: false,
     flags: {

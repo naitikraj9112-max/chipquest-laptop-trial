@@ -492,11 +492,13 @@ function pickLaptop(id) {
 }
 
 function runIntroCutscene() {
-  // CS_INTRO: lock, face player, G1, G2, G3, MUSIC sting MUS_RIVAL, R1, R2, MUSIC resume MUS_STORE, G4, unlock, set guideMet
+  // CS_INTRO: lock, face player, G1, ask name (Pokemon-style!), G2, G3, MUSIC sting MUS_RIVAL, R1, R2, MUS_STORE, G4, unlock
   scriptRunner.run([
     ['LOCK'],
     ['FACE', 'guide', 'down'],
     ['SAY', 'G1'],
+    ['SAY', 'G2_ASK'],
+    ['ASK_NAME'],
     ['SAY', 'G2'],
     ['SAY', 'G3'],
     ['MUSIC', 'MUS_RIVAL'],

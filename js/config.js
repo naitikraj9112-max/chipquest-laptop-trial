@@ -14,7 +14,7 @@ export const cfg = {
   WIPE_MS: 600,
   IDLE_RESET_S: 60,
   STORE_NAME: 'RELIANCE DIGITAL',
-  NEXT_STEP_URL: 'https://www.intel.com/content/www/us/en/products/evo.html',
+  NEXT_STEP_URL: 'https://www.intel.com/content/www/us/en/ai-pc/overview.html',
   
   // Palette (16 colours, section 3.5)
   PAL: {

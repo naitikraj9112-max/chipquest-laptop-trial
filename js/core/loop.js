@@ -87,8 +87,10 @@ function tick(now) {
   // Clamp dt to 50ms (section 12)
   if (dt > 50) dt = 50;
 
-  // Handle Pause toggle (Escape) when in game
-  if (input.pauseJustPressed()) {
+  // Handle Pause toggle (Escape) when in game (unless naming modal is open)
+  if (window.CQ?.isModalOpen) {
+    input.resetFrame();
+  } else if (input.pauseJustPressed()) {
     if (sceneManager.currentId && sceneManager.currentId !== 'TITLE' && !idleResetting) {
       pauseMenu.toggle();
     }

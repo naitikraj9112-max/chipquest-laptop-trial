@@ -86,6 +86,18 @@ export const scriptRunner = {
           break;
         }
 
+        case 'ASK_NAME': {
+          await new Promise(resolve => {
+            if (window.CQ && window.CQ.askPlayerName) {
+              window.CQ.askPlayerName(() => resolve());
+            } else {
+              state.playerName = state.playerName || 'ASH';
+              resolve();
+            }
+          });
+          break;
+        }
+
         case 'WAIT': {
           const ms = args[0] || 500;
           await new Promise(resolve => setTimeout(resolve, ms));

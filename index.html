@@ -49,6 +49,21 @@
   <!-- Fullscreen button (section 12) -->
   <button id="btn-fullscreen" title="Fullscreen">⛶</button>
 
+  <!-- Pokemon-style player name prompt modal -->
+  <div id="name-modal" class="hidden" role="dialog" aria-modal="true" aria-label="Enter trainer name">
+    <div id="name-card">
+      <div id="name-title">YOUR NAME?</div>
+      <div id="name-sub">Prof. Chip wants to register your Trainer Card!</div>
+      <input id="name-input" type="text" maxlength="10" placeholder="ASH" autocomplete="off" spellcheck="false" />
+      <div id="name-presets">
+        <button type="button" class="name-preset" data-name="ASH">ASH</button>
+        <button type="button" class="name-preset" data-name="RED">RED</button>
+        <button type="button" class="name-preset" data-name="KAI">KAI</button>
+      </div>
+      <button id="name-ok" type="button">OK</button>
+    </div>
+  </div>
+
   <script>
     // Fullscreen toggle (section 12)
     const fsBtn = document.getElementById('btn-fullscreen');

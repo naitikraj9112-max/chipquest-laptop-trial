@@ -95,8 +95,12 @@ export const input = {
 
   init(canvas) {
     canvasRef = canvas;
-    // Keyboard
+    // Keyboard (bypass when typing into Trainer Name input modal)
     window.addEventListener('keydown', e => {
+      if (window.CQ?.isModalOpen || document.activeElement?.tagName === 'INPUT') {
+        lastInputTime = Date.now();
+        return;
+      }
       const wasDown = keysDown[e.key];
       keysDown[e.key] = true;
       lastInputTime = Date.now();

@@ -12,62 +12,62 @@ let phase = 'cards'; // cards, banner, done, transitioning
 
 const cards = [
   {
-    title: 'CORE ULTRA X9 SER.3',
+    title: 'CORE ULTRA SERIES 3',
     color: cfg.PAL['B'],
     rows: [
-      'EX: ThinkPad X9-15p Aura / Yoga Slim 7',
+      'Models: ThinkPad X9-15p Aura, Yoga Slim 7',
       'Ultra X9 388H: 16C, 5.1GHz, Intel 18A',
-      'NPU 5: 50 TOPS | Arc B390 12 Xe3',
-      'LPDDR5X-9600 | Up to 180 plat. TOPS',
+      'NPU 5: 50 TOPS | Arc B390 12 Xe3 cores',
+      'LPDDR5X-9600 | Up to 180 platform TOPS',
     ]
   },
   {
-    title: 'CORE ULTRA 7/5 SER.3',
+    title: 'ULTRA 7 & 5 SERIES 3',
     color: cfg.PAL['B'],
     rows: [
-      'EX: Acer TravelMate P6 / Swift Spin',
+      'Models: Acer TravelMate P6, Swift Spin 14',
       'Ultra 7 355 / 5 338H (8-12C, 4.7GHz)',
-      'NPU 5: 47-49 TOPS | Arc B370 / Xe3',
-      'Intel 18A, vPro & Evo battery+wake',
+      'NPU 5: 47-49 TOPS | Arc B370 / Xe3 iGPU',
+      'Intel 18A, Intel vPro & Evo verified',
     ]
   },
   {
     title: 'CORE SERIES 3 (ENTRY)',
     color: cfg.PAL['9'],
     rows: [
-      'EX: Acer Swift Air 14 / Vivobook 15',
+      'Models: Acer Swift Air 14, Vivobook 15',
       'Core 7 350 / 5 320 (6C, up to 4.8GHz)',
-      'NPU 5: 17 TOPS (40 plat. TOPS), 2 Xe3',
-      '10-28W, Wi-Fi 7, TB4 everyday AI',
+      'NPU 5: 17 TOPS (40 platform), 2 Xe3',
+      '10-28W envelope, Wi-Fi 7 & Thunderbolt 4',
     ]
   },
   {
-    title: 'CORE ULTRA 200V / H',
+    title: 'CORE ULTRA 200V & 200H',
     color: cfg.PAL['B'],
     rows: [
-      'EX: ThinkPad P1 Gen 8 / 200V Aura Ed.',
+      'Models: ThinkPad P1 Gen 8, 200V Aura Ed.',
       '200V: 8C, Arc 140V Xe2, 48 NPU TOPS',
-      '200HX: up to 24C, 5.5GHz + dGPU',
-      'LP5X-8533 in-pkg (200V) / DDR5 (H/HX)',
+      '200HX: up to 24C, 5.5GHz + discrete GPU',
+      'LPDDR5X-8533 (200V) / DDR5 (H & HX)',
     ]
   },
   {
     title: 'AMD RYZEN AI',
     color: cfg.PAL['5'],
     rows: [
-      'EX: Zenbook S 16 (HX 370) / Swift 14 AI',
-      '50 TOPS XDNA 2 NPU, Radeon 890M/860M',
-      'Runs x86 Windows apps natively',
-      'Compare battery, RAM speed & cooling',
+      'Models: Zenbook S 16 (HX 370), Swift 14 AI',
+      '50 TOPS XDNA 2 NPU, Radeon 890M / 860M',
+      'Runs x86 Windows applications natively',
+      'Compare battery, RAM speed and cooling',
     ]
   },
   {
     title: 'QUALCOMM SNAPDRAGON X',
     color: cfg.PAL['6'],
     rows: [
-      'Also includes an Arm AI NPU',
-      'Efficient thin-and-light laptop chip',
-      'Some Windows apps/games run emulated',
+      'Includes a dedicated Arm-based AI NPU',
+      'Power-efficient thin-and-light laptop chip',
+      'Some Windows apps & games use emulation',
       'Check your must-have apps before buying',
     ]
   },
@@ -75,9 +75,9 @@ const cards = [
     title: 'APPLE MAC',
     color: cfg.PAL['2'],
     rows: [
-      'Own Neural Engine for local AI',
-      'Runs macOS, not Windows',
-      'Check college & gaming app needs',
+      'Uses Apple Neural Engine for local AI',
+      'Runs macOS rather than Windows OS',
+      'Check college and PC gaming needs',
       'Often comes at a higher price tier',
     ]
   },
@@ -85,10 +85,10 @@ const cards = [
     title: 'NO-AI LAPTOP',
     color: cfg.PAL['1'],
     rows: [
-      'No dedicated NPU engine',
-      'AI workloads run on main CPU/GPU',
-      'More battery drain & higher heat',
-      'Lowest upfront tag, shorter runway',
+      'No dedicated NPU hardware engine',
+      'AI tasks run on main CPU and GPU cores',
+      'Higher battery drain and extra heat',
+      'Lower upfront price, shorter AI runway',
     ]
   },
 ];
@@ -146,7 +146,7 @@ export const PcdexScene = {
         // Recommend real Intel OEM laptop and prompt player to walk north into the PRO GYM!
         dialogueUI.show([
           D.G21,
-          { speaker: 'PC-DEX', text: `PC-DEX recommends ${intel.oemName} for ${persona.toUpperCase()}!` },
+          { speaker: 'PC-DEX', text: `PC-DEX picked ${intel.oemName} for ${state.playerName || 'ASH'}!` },
           D.G22_GYM,
         ], () => {
           phase = 'transitioning';
@@ -197,9 +197,9 @@ export const PcdexScene = {
         ctx.textBaseline = 'top';
         ctx.fillText(card.title, cx + 6, cy + 6);
 
-        // Rows (crisp 3x5 micro bitmap font)
+        // Rows (crisp proportional readable pixel font)
         for (let i = 0; i < card.rows.length; i++) {
-          uiArt.drawMicroText(ctx, `> ${card.rows[i]}`, cx + 8, cy + 27 + i * 16, cfg.PAL['0']);
+          uiArt.drawSmallText(ctx, `> ${card.rows[i]}`, cx + 7, cy + 27 + i * 16, cfg.PAL['0']);
         }
 
         // Card counter
@@ -231,9 +231,9 @@ export const PcdexScene = {
         ctx.textAlign = 'left';
 
         uiArt.drawMiniText(ctx, intel.oemName, 120, by + 26, cfg.PAL['4'], { align: 'center' });
-        uiArt.drawMicroText(ctx, intel.hudSpec, 120, by + 40, cfg.PAL['A'], { align: 'center' });
-        uiArt.drawMicroText(ctx, 'Intel 18A + NPU 5 + Evo tested!', 120, by + 54, cfg.PAL['4'], { align: 'center' });
-        uiArt.drawMicroText(ctx, 'PRO ARENA GYM UNLOCKED FOR STAGE 2!', 120, by + 68, cfg.PAL['7'], { align: 'center' });
+        uiArt.drawSmallText(ctx, intel.hudSpec, 120, by + 40, cfg.PAL['A'], { align: 'center' });
+        uiArt.drawSmallText(ctx, 'Intel 18A + NPU 5 + Evo tested!', 120, by + 54, cfg.PAL['4'], { align: 'center' });
+        uiArt.drawSmallText(ctx, 'PRO ARENA GYM UNLOCKED FOR STAGE 2!', 120, by + 68, cfg.PAL['7'], { align: 'center' });
 
         const contLabel = input.isTouch ? '[A] ENTER PRO GYM' : '[Z] ENTER PRO GYM';
         uiArt.drawMiniText(ctx, contLabel, 120, 132, cfg.PAL['B'], { align: 'center' });

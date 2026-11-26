@@ -53,6 +53,63 @@ async function boot() {
     dialogueUI,
     input,
     loop,
+    isModalOpen: false,
+    askPlayerName: null,
+  };
+
+  // Name Prompt modal wiring (asked on first interaction with Prof. Chip)
+  const nameModal = document.getElementById('name-modal');
+  const nameInput = document.getElementById('name-input');
+  const nameOkBtn = document.getElementById('name-ok');
+  window.CQ.askPlayerName = cb => {
+    if (!nameModal || !nameInput || !nameOkBtn) {
+      state.playerName = state.playerName || 'ASH';
+      if (cb) cb(state.playerName);
+      return;
+    }
+    window.CQ.isModalOpen = true;
+    input.flush();
+    nameInput.value = '';
+    nameModal.classList.remove('hidden');
+    setTimeout(() => { try { nameInput.focus(); } catch {} }, 30);
+
+    const submit = () => {
+      const raw = (nameInput.value || '').trim().toUpperCase().replace(/[^A-Z0-9 _-]/g, '').slice(0, 10);
+      const chosen = raw || 'ASH';
+      state.playerName = chosen;
+      nameModal.classList.add('hidden');
+      window.CQ.isModalOpen = false;
+      input.flush();
+      nameInput.blur();
+      cleanup();
+      if (window.CQ.audio) window.CQ.audio.playSfx('sfx_confirm');
+      if (cb) cb(chosen);
+    };
+
+    const onKey = e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        e.stopPropagation();
+        submit();
+      }
+    };
+    const onPreset = e => {
+      const n = e.target?.getAttribute?.('data-name');
+      if (n) {
+        nameInput.value = n;
+        submit();
+      }
+    };
+    const presetBtns = Array.from(nameModal.querySelectorAll('.name-preset'));
+    const cleanup = () => {
+      nameOkBtn.removeEventListener('click', submit);
+      nameInput.removeEventListener('keydown', onKey);
+      presetBtns.forEach(b => b.removeEventListener('click', onPreset));
+    };
+
+    nameOkBtn.addEventListener('click', submit);
+    nameInput.addEventListener('keydown', onKey);
+    presetBtns.forEach(b => b.addEventListener('click', onPreset));
   };
 
   // Initialize art
