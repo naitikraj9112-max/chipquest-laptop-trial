@@ -28,7 +28,7 @@ const C6=84, D6=86, E6=88, F6=89, G6=91;
 const Db3=49, Eb3=51, Gb3=54, Ab3=56;
 const Db4=61, Eb4=63, Gb4=66, Ab4=68;
 const Db5=73, Eb5=75, Gb5=78, Ab5=80;
-const Cs5=73, Fs4=66, Fs3=54;
+const Cs5=73, Fs4=66, Fs3=54, Cs4=61;
 
 // ── MUS_TITLE ───────────────────────────────────────────────────────
 // C major / 120 BPM / 8 bars / loop / Heroic & bouncy

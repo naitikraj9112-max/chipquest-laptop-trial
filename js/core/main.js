@@ -19,19 +19,29 @@ import { PersonaScene } from '../scenes/persona.js';
 import { PcdexScene } from '../scenes/pcdex.js';
 import { ResultScene } from '../scenes/result.js';
 
+console.log('[BOOT] All modules imported successfully');
+
 async function boot() {
+  console.log('[BOOT] boot() started');
+
   // Wait for font to load (section 3.2)
   try {
-    await document.fonts.load('8px "Press Start 2P"');
+    await Promise.race([
+      document.fonts.load('8px "Press Start 2P"'),
+      new Promise(resolve => setTimeout(resolve, 3000)) // 3s timeout
+    ]);
+    console.log('[BOOT] Font loaded or timed out');
   } catch(e) {
-    console.warn('Font load failed, using fallback monospace');
+    console.warn('Font load failed, using fallback monospace', e);
   }
 
   const canvas = document.getElementById('game');
+  console.log('[BOOT] Canvas:', canvas ? 'found' : 'NOT FOUND');
   
   // Initialize systems
   input.init(canvas);
   loop.init(canvas);
+  console.log('[BOOT] Input and loop initialized');
   
   // Set up global namespace (section 3.1)
   window.CQ = {
@@ -49,6 +59,7 @@ async function boot() {
   // Initialize art
   art.init();
   fx.init();
+  console.log('[BOOT] Art and FX initialized');
 
   // Register scenes — BATTLE1 and BATTLE2 get separate instances
   sceneManager.register('TITLE', TitleScene);
@@ -59,6 +70,7 @@ async function boot() {
   sceneManager.register('BATTLE2', createBattleScene('BATTLE2'));
   sceneManager.register('PCDEX', PcdexScene);
   sceneManager.register('RESULT', ResultScene);
+  console.log('[BOOT] Scenes registered');
 
   // Dev URL params (section 3.9)
   const params = new URLSearchParams(window.location.search);
@@ -78,6 +90,7 @@ async function boot() {
   // Hide loading screen
   const loading = document.getElementById('loading');
   if (loading) loading.style.display = 'none';
+  console.log('[BOOT] Loading screen hidden');
 
   // Start the appropriate scene
   if (startScene && cfg.SCENES.includes(startScene)) {
@@ -104,8 +117,10 @@ async function boot() {
   } else {
     await sceneManager.switchTo('TITLE');
   }
+  console.log('[BOOT] Scene loaded, starting loop');
 
   loop.start();
+  console.log('[BOOT] Game loop started!');
 }
 
 boot().catch(e => console.error('Boot failed:', e));

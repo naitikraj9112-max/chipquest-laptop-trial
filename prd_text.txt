@@ -1,0 +1,1172 @@
+CHIPQUEST: The Laptop Trial
+Product Requirements Document v1.0 (LOCKED FOR BUILD) Intel 1 Million Minds, Round
+1 (CMRIT x Intel). Deadline: 27 Nov 2026, 12:00 PM. Submit a public URL (no exe or code
+files) at https://forms.gle/HRTdMvLrKX2srXUbA
+0. How to use this PRD
+This file is the single source of truth. Three tracks build in parallel (section 2) and
+merge by file, so every shared value lives in section 3 (Shared Contract). Section 3
+beats every other section. Section 8 (battle numbers) beats section 7 (script) if they
+ever disagree.
+If something is unspecified: take the simplest literal reading, add one line to the
+Decisions Log (section 13.4), keep going. Never change a section 3 value without
+logging it.
+Stub first: within 30 minutes each track commits stub files that satisfy the interfaces
+in 3.7 (silent audio, rectangle sprites, hard-coded battle). Everyone integrates against
+stubs, then swaps in the real thing.
+Do NOT use any Nintendo or Pokemon names, sprites, music or logos. All art and
+music must be original. The game borrows only the genre (8-bit monster-collecting
+RPG).
+1. Product
+1.1 Pitch. A 3-minute pixel RPG set in an electronics store. You pick the shiny laptop, lose a
+race to your rival, learn why, then win the rematch on the right AI PC.
+1.2 Goal. Turn 'Why an AI PC?' into 'I want this Intel AI PC'.
+1.3 Audience and setting. Gen Z walk-ins at Large Format Retail stores (Reliance Digital,
+Croma, Vijay Sales) with little technical knowledge, on a touchscreen kiosk or a phone.
+Hook in 5 seconds, whole run 2-3 minutes (target 180 s), plain language. Only three terms
+are taught in-game: NPU, Evo, battery.
+1.4 Rubric mapping.
+CHIPQUEST: The Laptop Trial
+Page 1 of 23
+
+1.5 Lessons (every scene serves one). L1: AI jobs on a laptop with no NPU burn battery
+and heat. L2: the right engine keeps it fast and cool (CPU is quick, GPU is strong, NPU is
+efficient). L3: on-device AI keeps working offline, so your files can stay on your laptop.
+Plus: the Evo badge means tested for real-world battery and wake; pick the chip tier for
+your life.
+1.6 Non-goals. No save system, accounts, analytics, wild encounters, open world,
+multiplayer, live AI API calls or real benchmark claims.
+2. Tracks and file ownership
+Rules: B and C never edit A files, and A never edits B or C files. Need a change? Log it in
+13.4. js/config.js is created by A at minute 0 from section 3.
+Criterion
+Pts
+How the game delivers
+Creativity
+3
+Retro RPG format, laptops as partners, workloads
+as battles
+Persuasive impact
+3
+Feel the pain (lose), learn why, win; personalised
+Trainer Card and a clear next step
+Technical accuracy
+3
+Three-engine model, NPU TOPS tiers, Evo criteria,
+claims register (13.1), 'illustrative' disclaimers
+Competitive superiority
+1
+PC-dex scan of AMD, Qualcomm, Apple and no-AI
+laptops (9.2)
+Track
+Owns
+Delivers
+A: Engine and
+Gameplay (integrator)
+index.html, css/, js/config.js,
+js/core, js/world, js/scenes,
+js/battle, js/data, tools/
+Game loop, scenes, map,
+dialogue, battle engine and UI,
+data, balance test
+B: Audio and Music
+js/audio/*
+WebAudio synth, all music
+cues, all SFX
+C: Art and Visual Theme
+js/art/, assets/
+Palette, tiles, sprites, UI
+frames, FX, storefront card,
+QR image
+CHIPQUEST: The Laptop Trial
+Page 2 of 23
+
+/index.html  /css/style.css  /js/config.js
+/js/core/    main.js loop.js input.js sceneManager.js bus.js state.js
+/js/world/   tilemap.js entity.js camera.js scriptRunner.js dialogue.js
+/js/scenes/  title.js intro.js store.js battle.js persona.js pcdex.js 
+result.js
+/js/battle/  engine.js ui.js
+/js/data/    dialogue.js laptops.js moves.js claims.js
+/js/art/     palette.js sprites.js tiles.js ui.js fx.js          (C)
+/js/audio/   audio.js music.js sfx.js                            (B)
+/assets/     qr.png (56x56)      /tools/ balance-sim.mjs
+3. SHARED CONTRACT (frozen)
+3.1 Tech. Static site. Vanilla JS ES modules ( <script type='module'> ), HTML5 Canvas 2D,
+WebAudio. No bundler, framework or build step. Only external asset: Google Font 'Press
+Start 2P'. Host on GitHub Pages or Netlify. Global namespace window.CQ = { cfg, bus,
+state, audio, art, fx } .
+3.2 Display. Logical canvas 240x160, tile 16 px (15x10 tiles visible).
+imageSmoothingEnabled=false , CSS image-rendering: pixelated , scale to the largest
+integer that fits (min 1), centred, letterbox colour INK. Font 'Press Start 2P' 8 px at integer
+coordinates (fallback monospace); await document.fonts.load  before the first frame.
+3.3 Controls.
+Action
+Keyboard
+Touch
+Move
+Arrows /
+WASD
+On-screen D-pad (bottom-left,
+outside canvas)
+A: confirm, talk, advance
+Z, Enter,
+Space
+A button (bottom-right) or tap
+anywhere on a dialogue box or menu
+item
+B: back
+X, Esc
+B button
+Mute
+M
+Speaker icon, top-right corner
+CHIPQUEST: The Laptop Trial
+Page 3 of 23
+
+3.4 Constants (cfg).
+3.5 Palette (16 colours, fixed; no other colours allowed). Sprite strings use the hex digit
+as the colour key and '.' for transparent.
+Action
+Keyboard
+Touch
+Tapping while text is typing
+completes the line instantly. D-pad
+and A/B show only on touch devices.
+Portrait screens show a 'ROTATE
+DEVICE' overlay.
+Key
+Value
+LOGICAL_W / LOGICAL_H / TILE
+240 / 160 / 16
+STEP_MS (one tile move)
+140
+TEXT_CPS / TEXT_COLS / TEXT_ROWS
+45 / 28 / 2
+BAR_TWEEN_MS / BATTLE_MSG_MS /
+WIPE_MS
+300 / 800 / 600
+IDLE_RESET_S
+60
+STORE_NAME
+'BIG DIGITAL' (max 14 chars; use a real
+retailer name only with permission)
+NEXT_STEP_URL
+placeholder, set before deploy (O-2)
+CHIPQUEST: The Laptop Trial
+Page 4 of 23
+
+3.6 ID enumerations (exact strings).
+Scenes: TITLE INTRO STORE BATTLE1 PERSONA BATTLE2 PCDEX RESULT
+Laptops: nova  (profile LEGACY), aura_go  (profile GO), aura_pro  (profile PRO)
+Personas: student creator gamer . Move types: AI_LIGHT AI_HEAVY GFX CPU .
+Engines: CPU GPU NPU . Facings: down up left  (right = left drawn with flipX).
+Music: MUS_TITLE MUS_STORE MUS_RIVAL MUS_BATTLE1 MUS_BATTLE2 MUS_WIN
+MUS_LOSE MUS_RESULT
+SFX: sfx_blip sfx_confirm sfx_cancel sfx_step sfx_start sfx_card sfx_super
+sfx_ok sfx_weak sfx_heat sfx_warn sfx_shutdown sfx_complete sfx_wifi_drop
+Sprites: spr_{player|guide|rival}_{down|up|left}_{0|1|2}  (0 stand, 1 and 2
+walk), spr_laptop_{nova|aura_go|aura_pro} , spr_mini_nova , spr_mini_aura ,
+icon_{student|creator|gamer} ,
+icon_{cpu|gpu|npu|cursor|more|warn|wifi_off} , spr_storefront . Tiles:
+tile_{floor|carpet|wall|poster|shelf|counter|table|door|plant} .
+3.7 Interfaces. A calls B and C only through these. Stubs must exist from minute 30.
+Key
+Name
+Hex
+Key
+Name
+Hex
+0
+INK
+#0F1020
+8
+LIME
+#7FD35B
+1
+DUSK
+#2B2D4A
+9
+GREEN
+#2BA84A
+2
+SLATE
+#5B5F8E
+A
+CYAN
+#2EC4F1
+3
+MIST
+#A7ABD6
+B
+BLUE
+#0071C5
+4
+WHITE
+#F4F4FA
+C
+VIOLET
+#7B2FF7
+5
+RED
+#E63946
+D
+PINK
+#FF4FB0
+6
+ORANGE
+#FF8C42
+E
+WOOD
+#8B5A2B
+7
+YELLOW
+#FFD23F
+F
+SAND
+#D9B38C
+CHIPQUEST: The Laptop Trial
+Page 5 of 23
+
+CQ.audio.unlock()                        // first user gesture
+CQ.audio.playMusic(id, {fadeMs:300})     // loops unless cue is one-shot
+CQ.audio.stopMusic(fadeMs)
+CQ.audio.playSfx(id)
+CQ.audio.setMuted(bool); CQ.audio.isMuted()
+CQ.art.draw(ctx, id, x, y, {flipX})      // sprites and icons, exact size
+CQ.art.drawTile(ctx, tileId, x, y)
+CQ.art.drawBox(ctx, x, y, w, h, style)   // style: 'dialog'|'panel'|'card'
+CQ.fx.update(dtMs); CQ.fx.draw(ctx)
+CQ.fx.shake(ms, px); CQ.fx.flash(ms, key)   // key = palette hex digit
+CQ.fx.wipeOut(ms) / wipeIn(ms)           // return Promise
+CQ.bus.on(name, fn); CQ.bus.emit(name, payload)
+Bus events (A emits): scene:enter {id} , dialogue:blip , battle:event {t, who,
+...}  (types in 8.9).
+3.8 Game state (CQ.state).
+{ scene, player:{x,y,dir}, canLeave:false,
+  flags:{ guideMet:false, starter:null /*'nova'|'aura_go'*/, b1Winner:null 
+/*'player'|'rival'*/,
+          persona:null, b2Winner:null, b2PlayerBatt:null, b2Turns:null },
+  laptops:{ player:null, rival:null } }
+3.9 Dev URL params (all tracks use these to test alone). ?
+scene=STORE|BATTLE1|BATTLE2|PCDEX|RESULT , &persona=student|creator|gamer ,
+&starter=nova|aura_go , &debug=1  (FPS, tile coords), &mute=1 .
+4. Story and characters
+Tone: friendly, quick, a little cheeky. Plain words. Max 54 characters per dialogue page.
+Laptops (fictional models):
+Character
+Role
+Look (16x16)
+YOU
+Silent player, no name entry
+Blue hoodie (B), dark hair (0), SAND skin
+PROF. CHIP
+Store guide (the wise mentor)
+White coat (4), MIST hair, blue badge
+ROHAN
+Rival, brash but fair
+Red jacket (5), ORANGE spiky hair
+CHIPQUEST: The Laptop Trial
+Page 6 of 23
+
+5. Scene flow (target 180 s total)
+ID
+Name
+Look
+In-game truth
+nova
+NOVA X
+Neon violet/pink body, RGB
+keys, SALE tag
+Older chip, no NPU
+aura_go
+AURA
+GO
+Graphite (SLATE) body, small
+'AI' on screen
+Intel Core Series 3, AI-ready, NPU
+up to 17 TOPS
+aura_pro
+AURA
+PRO
+Dark SLATE body, yellow 'EVO'
+sticker
+Intel Core Ultra Series 3, Evo,
+NPU up to 50 TOPS
+Scene
+What happens
+Music
+Target
+TITLE
+Logo 'CHIPQUEST', 'The Laptop Trial',
+blinking 'TAP TO START'. Idle 60 s
+anywhere resets here
+MUS_TITLE
+4 s
+INTRO
+Storefront card (spr_storefront) +
+pages I1-I3
+MUS_TITLE
+6 s
+STORE
+Walk in, guide and rival cutscene, pick
+a laptop (6, 7)
+MUS_STORE, sting
+MUS_RIVAL
+32 s
+BATTLE1
+Evening Rush race (8.4)
+MUS_BATTLE1
+40 s
+STORE
+(resume)
+Lesson dialogue G8-G12
+MUS_STORE
+18 s
+PERSONA
+Choose STUDENT / CREATOR /
+GAMER, get AURA PRO
+MUS_STORE
+8 s
+BATTLE2
+Persona race, AURA PRO vs AURA GO
+(8.5)
+MUS_BATTLE2
+35 s
+PCDEX
+Competitor scan, 5 cards (9.2)
+MUS_RESULT
+25 s
+RESULT
+Trainer Card: recommendation, QR,
+next step (9.3)
+MUS_RESULT
+12 s
+CHIPQUEST: The Laptop Trial
+Page 7 of 23
+
+Transitions: wipe (cfg.WIPE_MS) between scenes, battle swirl = 8 horizontal strips sliding
+alternately.
+6. World: the store
+Map 20 columns x 14 rows, coordinates (col,row) from the top-left. Camera follows the
+player, clamped to the map.
+row  0  ####################
+row  1  #WW.WW.WW.WW.WW.WW.#
+row  2  #...SSSS....SSSS...#
+row  3  #..................#
+row  4  #..SSSS......SSSS..#
+row  5  #..................#
+row  6  #........TT........#
+row  7  #..................#
+row  8  #..SSSS......CCCCC.#
+row  9  #..................#
+row 10  #,,,,,,,,,,,,,,,,,,#
+row 11  #..................#
+row 12  #P.......@........P#
+row 13  #########DD#########
+CHIPQUEST: The Laptop Trial
+Page 8 of 23
+
+Entities: PROF. CHIP at (9,5) facing down. ROHAN at (11,6) facing left. Table tile (9,6) holds
+NOVA X ( spr_mini_nova  drawn over the tile), table tile (10,6) holds AURA GO
+( spr_mini_aura ). A picked laptop's mini sprite disappears at once; the other disappears
+when the rival takes it.
+Movement: grid based, one tile per STEP_MS, hold key to repeat, a turn into a blocked tile
+only changes facing. Walk animation alternates frames 1 and 2, frame 0 when standing.
+Interactions (press A facing the tile):
+Table (9,6) or (10,6): laptop card (see 7.3).
+Shelf S: 'Shiny! But shiny isn't everything.' Counter C: 'Staff counter. PROF. CHIP is
+busy.' Plant: 'A very healthy plant.'
+Door D: toast 'Not yet! Pick a partner.' (while canLeave  is false, which is always in this
+build).
+PROF. CHIP and ROHAN when talked to after their cutscene: repeat their last line.
+Trigger TR_INTRO: first time the player's row is 8 or less, run CS_INTRO (input locked).
+Toast on first control: 'D-PAD: MOVE A: TALK' for 3 s.
+Char
+Tile
+Walkable
+.
+tile_floor
+yes
+,
+tile_carpet
+yes
+#
+tile_wall
+no
+W
+tile_poster
+no
+S
+tile_shelf
+no
+C
+tile_counter
+no
+T
+tile_table
+no
+P
+tile_plant
+no
+D
+tile_door
+no (interact only)
+@
+player spawn (9,12), facing up
+n/a
+CHIPQUEST: The Laptop Trial
+Page 9 of 23
+
+7. Script (exact text)
+7.1 Engine rules. Textbox: x0 y112 w240 h48, border 2 px, padding 6, text area 224 px = 28
+columns, 2 rows (line height 14, first row y122), blinking icon_more  at (224,142). Speaker
+nameplate (INK fill, WHITE text, width = chars x 8 + 8) at (8,100). Auto-paginate: more than
+2 wrapped rows starts a new page. Typewriter at TEXT_CPS, sfx_blip  every second
+character. {STORE} is cfg.STORE_NAME. Script commands the runner supports: SAY,
+CHOICE, SET, WAIT, FACE, MOVE, MUSIC, SFX, FLASH, SHAKE, CARD, BATTLE, SCENE, IF,
+GOTO.
+7.2 Dialogue table (keys are canonical; dialogue.js must contain exactly these strings).
+Key
+Speaker
+Text
+I1
+narrator
+You need a new laptop for the next 4 years.
+I2
+narrator
+The store is full of shiny choices.
+I3
+narrator
+Choose wisely, trainer!
+G1
+PROF. CHIP
+Hey! Welcome to {STORE}!
+G2
+PROF. CHIP
+I'm PROF. CHIP. I help people pick a laptop partner.
+G3
+PROF. CHIP
+A good partner lasts for years. A bad one doesn't.
+R1
+ROHAN
+Hey, slowpoke! I'm ROHAN.
+R2
+ROHAN
+I'll beat you at everything. Even shopping!
+G4
+PROF. CHIP
+Pick your partner from this table!
+G5
+PROF. CHIP
+NOVA X? Very shiny! Hmm... we'll see.
+R3
+ROHAN
+Ha! Then I'll take AURA GO. Boring? Let's see!
+G5b
+PROF. CHIP
+AURA GO! A thoughtful pick. Let's test it.
+R3b
+ROHAN
+Fine! I'll take the shiny NOVA X. It's gorgeous!
+G6
+PROF. CHIP
+Challenge! Both at 40% battery. No charger!
+G7
+PROF. CHIP
+Task: video call, clean voice, export a video.
+R4
+ROHAN
+Ha! Told you! Shiny doesn't win races!
+R4b
+ROHAN
+My shiny NOVA X... died?! No way!
+CHIPQUEST: The Laptop Trial
+Page 10 of 23
+
+Key
+Speaker
+Text
+G8
+PROF. CHIP
+Hold on, ROHAN. Let me explain, trainer.
+G8b
+PROF. CHIP
+Nice win! But do you know WHY it won?
+G9
+PROF. CHIP
+NOVA X looks great. But it has no AI engine.
+G10
+PROF. CHIP
+AI jobs run on the main chip. That drains battery.
+G11
+PROF. CHIP
+AURA GO has an NPU: a mini chip made for AI.
+G12
+PROF. CHIP
+It does AI work with far less power and heat.
+G13
+PROF. CHIP
+Now, what kind of trainer are you?
+G14s
+PROF. CHIP
+Studying! Then you need long battery and offline
+AI.
+G14c
+PROF. CHIP
+Creating! You need AI power for photos and video.
+G14g
+PROF. CHIP
+Gaming! You need smooth frames and cool temps.
+G15
+PROF. CHIP
+Take AURA PRO: Intel Core Ultra with the Evo
+badge.
+Gf1
+PROF. CHIP
+ROHAN, take AURA GO for the rematch. (fork path
+only, before G15)
+R5
+ROHAN
+Bring it! AURA GO never lets me down!
+B2s
+PROF. CHIP
+ROUND 2! Exam night. Finish before battery dies!
+B2c
+PROF. CHIP
+ROUND 2! Reel deadline. Finish before battery dies!
+B2g
+PROF. CHIP
+ROUND 2! Stream night. Finish before battery dies!
+W1
+PROF. CHIP
+No internet? AI on your laptop still works! (mid-
+battle)
+W2
+PROF. CHIP
+Your files can stay on your laptop. (mid-battle)
+R6
+ROHAN
+What?! You crushed me!
+G17
+PROF. CHIP
+That's the power of the right AI PC.
+G18
+PROF. CHIP
+CPU is quick. GPU is strong. NPU is efficient.
+G19
+PROF. CHIP
+An AI PC uses all three, so it stays fast and cool.
+CHIPQUEST: The Laptop Trial
+Page 11 of 23
+
+7.3 Laptop card (scene STORE, on interacting with a table). Panel 160x96 centred
+showing the laptop sprite, name, and rows (Look, Price, Battery, AI speed). NOVA X: Look
+5 stars, Price 'SALE -20%' on a RED tag, Battery '???', AI speed '???'. AURA GO: Look 3
+stars, Price 'FAIR', Battery '???', AI speed '???', chip line 'Intel Core Series 3, AI-ready'.
+Choice: TAKE IT / LOOK AGAIN. The '???' rows are the hook: the truth is revealed in battle.
+Prices are not shown as real numbers.
+7.4 Sequences.
+CS_INTRO: lock, face player, G1, G2, G3, MUSIC sting MUS_RIVAL, R1, R2, MUSIC
+resume MUS_STORE, G4, unlock, set guideMet .
+Pick NOVA (main path): SET starter=nova, laptops.player=nova,
+laptops.rival=aura_go; G5, R3, G6, G7, SCENE BATTLE1 (BI1 shown inside).
+Pick AURA GO (fork path): SET starter=aura_go, laptops.player=aura_go,
+laptops.rival=nova; G5b, R3b, G6, G7, BATTLE1.
+After BATTLE1: main path (player lost): R4, G8, G9, G10, G11, G12. Fork path (player
+won): R4b, G8b, G9, G10, G11, G12. Both converge at G9.
+PERSONA: G13, CHOICE (student/creator/gamer), G14s|G14c|G14g, fork path only:
+SET laptops.rival=aura_go and say Gf1; then SET laptops.player=aura_pro, G15, R5,
+B2s|B2c|B2g , SCENE BATTLE2.
+After BATTLE2: R6, G17, G18, G19, G20, SCENE PCDEX, G21, G22, SCENE RESULT.
+8. Battle system (deterministic, no RNG)
+8.1 Concept. A battle is a workload race, not combat. Each side has TASK (0-100, first to
+100 wins), BATT (battery %), HEAT (0-100). The player picks 1 of 4 moves (tasks) per turn.
+The rival follows a fixed script. Outcome is fully repeatable.
+8.2 Profiles and multipliers (base values are the no-NPU cost of a move).
+Key
+Speaker
+Text
+G20
+PROF. CHIP
+Let's scan the competition!
+G21
+PROF. CHIP
+Intel Evo laptops are tested for battery and wake.
+G22
+PROF. CHIP
+Here's your TRAINER CARD. Show it to the team!
+BI1
+system
+ROHAN challenges you! Finish before battery dies!
+(battle 1 intro)
+CHIPQUEST: The Laptop Trial
+Page 12 of 23
+
+8.3 Turn rules.
+1. Player acts first, then the rival (if the battle is still running).
+2. prog = round(base.prog * pm * throttle) , batt = ceil(base.batt * bm) , heat
+= round(base.heat * hm) . throttle = 0.7  if the actor's HEAT is 60 or more at the
+start of its move, else 1. Use JS Math.round and Math.ceil.
+3. Apply: TASK += prog (cap 100), BATT -= batt (floor 0), HEAT += heat (cap 100).
+4. If TASK is 100: the actor COMPLETES and wins (checked before faint).
+5. Else if BATT is 0: the actor FAINTS (shuts down) and the other side wins.
+6. After both have acted, both HEAT = max(0, HEAT - 5). Turn counter +1.
+7. At the start of BATTLE2 turn 3 emit EVENT wifi_drop , then pages W1 and W2. No
+numeric effect.
+8.4 BATTLE1 'Evening Rush' (both start BATT 40, TASK 0, HEAT 0). Resolved values as
+prog / batt / heat:
+Move
+type
+LEGACY (nova)
+GO (aura_go) prog / batt /
+heat
+PRO (aura_pro) prog / batt /
+heat
+AI_HEAVY
+x1 / x1 / x1, engine
+CPU
+x0.7 / x0.85 / x0.8, NPU
+x1.2 / x0.40 / x0.35, NPU
+AI_LIGHT
+x1 / x1 / x1, engine
+CPU
+x1.0 / x0.35 / x0.25, NPU
+x1.0 / x0.30 / x0.20, NPU
+GFX
+x1 / x1 / x1, engine
+CPU
+x1.0 / x0.60 / x0.6, GPU
+x1.15 / x0.50 / x0.5, GPU
+CPU
+x1 / x1 / x1, engine
+CPU
+x1.0 / x0.70 / x0.7, CPU
+x1.1 / x0.60 / x0.6, CPU
+Slot
+Label
+Type
+LEGACY
+GO
+M1
+BLUR BG
+AI_LIGHT
+18/12/25
+18/5/6
+M2
+CLEAN
+VOICE
+AI_LIGHT
+16/10/22
+16/4/6
+M3
+EXPORT
+VIDEO
+GFX
+22/14/30
+22/9/18
+CHIPQUEST: The Laptop Trial
+Page 13 of 23
+
+8.5 BATTLE2 (both start BATT 50). Player AURA PRO vs rival AURA GO. Persona changes
+only labels (9.1); numbers are identical for all personas. Base: every move prog 20.
+8.6 Effect line after each move ( {ENGINE}  is the engine used).
+Slot
+Label
+Type
+LEGACY
+GO
+M4
+CAPTIONS
+AI_LIGHT
+14/9/20
+14/4/5
+Rival script: main path (rival GO): M1,
+M2, M4, M3, M1, M2 (finishes on turn 6).
+Fork path (rival LEGACY): M3, M1, M2,
+M4 (shuts down on turn 4).
+Slot
+Type
+Base
+batt/heat
+GO
+prog/batt/heat
+PRO
+prog/batt/heat
+M1
+AI_HEAVY
+15/30
+14/13/24
+24/6/11
+M2
+AI_HEAVY
+14/28
+14/12/22
+24/6/10
+M3
+GFX
+12/22
+20/8/13
+23/6/11
+M4
+CPU
+9/16
+20/7/11
+22/6/10
+Rival script (GO): M1, M2,
+M1, M3, M2, M4.
+Expected: the player
+always completes on turn
+5 (every PRO move gives
+at least 22), while the
+rival sits at 62 TASK after
+turn 4.
+Kind
+Rule
+Text
+WEAK_AI
+LEGACY and type is
+AI_*
+CPU: No AI engine! It
+sweats...
+OK_LEGACY
+LEGACY and type is
+GFX or CPU
+CPU: Worked, but used lots
+of power.
+CHIPQUEST: The Laptop Trial
+Page 14 of 23
+
+8.7 Layout (logical px).
+Enemy panel (6,6,120x46): name row, then 3 bars (TASK, BATT, HEAT; label 8 px, bar
+80x6 at panel x+32) at panel y+14, +25, +36. Enemy sprite (48x32) at (170,8).
+Player sprite (48x32) at (22,62). Player panel (114,58,120x46), same bar layout.
+Bottom box (0,112,240x48): messages, or the 2x2 move menu (cell x = 16 + col x 108, y
+= 122 + row x 16, label max 12 characters, icon_cursor  beside the selected label).
+Show the engine icon for the last used move beside the actor's name.
+Bar colours: TASK LIME. BATT LIME at 50 or more, YELLOW at 20-49, RED below 20.
+HEAT CYAN below 60, RED with icon_warn  at 60 or more. Bars tween over
+BAR_TWEEN_MS.
+Backgrounds: BATTLE1 = diagonal stripes DUSK/INK with ORANGE edge (tension).
+BATTLE2 = INK with CYAN circuit grid (confidence).
+8.8 Invariants (tools/balance-sim.mjs must assert all and exit non-zero on failure).
+I1: in BATTLE1, LEGACY can never reach TASK 100 for any move sequence.
+Kind
+Rule
+Text
+SLOW
+non-LEGACY and prog
+below base
+NPU: Slow! Needs a bigger
+NPU.
+SUPER
+non-LEGACY and batt
+at most 0.45 x base
+NPU: Super effective! Power
+saved! (GPU: 'GPU: Super
+effective!')
+OK
+otherwise
+{ENGINE}: It worked.
+Other messages: {name} used
+{MOVE}! , {name} is too hot!
+Slowing down!  (when throttle
+applies), {name} ran out of
+battery and shut down! ,
+{name} finished the task! .
+Battle messages auto-advance
+after BATTLE_MSG_MS; only
+dialogue pages need a tap.
+Battery at or below 20% for the
+first time: sfx_warn , bar flashes
+RED.
+CHIPQUEST: The Laptop Trial
+Page 15 of 23
+
+I2: in BATTLE1, GO reaches TASK 100 for any move sequence without shutting down
+first.
+I3: main path: the player shuts down by turn 5, before the rival can finish (turn 6).
+I4: BATTLE2: AURA PRO completes by turn 5 for any move sequence, and never shuts
+down or overheats.
+I5: BATTLE2: the rival's TASK is 62 or less when the player completes.
+8.9 Battle events and cues ( battle:event  payload t ).
+t
+When
+Audio
+USED
+move chosen
+sfx_confirm
+EFFECT SUPER / OK / SLOW /
+WEAK
+after move
+sfx_super / sfx_ok / sfx_weak /
+sfx_weak
+THROTTLE
+heat penalty
+applied
+sfx_heat
+FAINT
+battery 0
+sfx_shutdown, then MUS_LOSE if
+the player fainted
+COMPLETE
+task 100
+sfx_complete, then MUS_WIN if
+the player completed
+EVENT wifi_drop
+BATTLE2 turn 3
+sfx_wifi_drop, show
+icon_wifi_off  banner 'WI-FI
+DROPPED!'
+LOW_BATT
+first time at or
+below 20%
+sfx_warn
+Scene music: BATTLE1 uses
+MUS_BATTLE1, BATTLE2 uses
+MUS_BATTLE2, battle end plays
+MUS_WIN or MUS_LOSE once,
+then the next scene's music
+starts.
+CHIPQUEST: The Laptop Trial
+Page 16 of 23
+
+9. Persona, PC-dex, Trainer Card
+9.1 Personas (PERSONA scene). Three buttons 64x56 at x=12, 88, 164 (y=40) with icon_*
+(scaled x2) and label. BATTLE2 labels (max 12 characters):
+9.2 PC-dex (competitor scan). Five cards, 224x96, swipe or tap arrows, plus a final
+banner. Wording is neutral and checkable (13.1). Intel card first.
+Persona
+M1
+M2
+M3
+M4
+student
+SUMMARISE
+TRANSLATE
+MAKE SLIDES
+FIND FILES
+creator
+PHOTO CLEAN
+BG SWAP
+EXPORT 4K
+CAPTIONS
+gamer
+AI HIGHLIGHT
+TRANSLATE
+BOOST FPS
+SAVE REPLAY
+Card
+L1
+L2
+L3
+L4
+INTEL CORE ULTRA
+AI engines:
+CPU+GPU+NPU
+NPU: up to
+50 TOPS
+Runs
+Windows
+apps
+natively
+Evo = tested
+battery+wake
+AMD RYZEN AI
+Also has an NPU
+Compare
+real battery
+tests
+Runs
+Windows
+apps
+natively
+Check the
+model, not logo
+QUALCOMM
+SNAPDRAGON X
+Also has an NPU
+Efficient
+Arm-based
+chip
+Some apps
+run via
+emulation
+Check your
+must-have apps
+APPLE MAC
+Own Neural
+Engine for AI
+Runs
+macOS, not
+Windows
+Check
+college &
+game apps
+Often a higher
+price
+NO-AI LAPTOP
+No NPU (AI
+engine)
+AI runs on
+the main
+chip
+More
+battery use
+& heat
+Often the
+lowest price
+CHIPQUEST: The Laptop Trial
+Page 17 of 23
+
+9.3 Trainer Card (RESULT). Panel 224x144 at (8,8). Title 'TRAINER CARD'. Left: persona
+icon, 'CLASS: {persona}', 'PARTNER: AURA PRO', 'BATTERY LEFT: {b2PlayerBatt}%',
+'TURNS: {b2Turns}'. Right: assets/qr.png  56x56 at (168,44) labelled 'SCAN OR ASK
+STAFF'. Recommendation block (4 lines, max 28 characters each):
+10. Art and visual theme (Track C)
+Style: 16-colour palette only (3.5), no anti-aliasing, 1 px INK outlines on characters,
+light from top-left, friendly and slightly cheeky.
+Card
+L1
+L2
+L3
+L4
+Final banner:
+'Windows apps +
+Evo testing' (Intel
+highlighted).
+Persona
+L1
+L2
+L3
+L4
+student
+STUDENT
+PICK
+Core Ultra
+5 or higher
+Evo badge,
+16GB RAM+
+Long battery,
+offline AI
+creator
+CREATOR
+PICK
+Core Ultra
+7 or higher
+Evo badge,
+16GB RAM+,
+SSD
+More AI +
+graphics
+power
+gamer
+GAMER
+PICK
+Core Ultra
+X-series
+Strongest Intel
+graphics
+Evo badge,
+16GB RAM+
+Below: 'Tight budget? Ask
+about Core Series 3 (AI-
+ready).' Next step line:
+'NEXT: Ask staff to demo
+it'. Footer, 2 lines: 'Game
+values are illustrative.' /
+'Real battery/speed vary
+by PC.' Tapping the card
+restarts at TITLE.
+CHIPQUEST: The Laptop Trial
+Page 18 of 23
+
+Authoring: sprites as arrays of equal-length strings in js/art/sprites.js (palette keys
+per 3.5); render once into cached offscreen canvases. Procedural drawing is
+acceptable if IDs and exact sizes match 3.6.
+Sizes: characters 16x16 (head top, feet bottom); tiles 16x16; spr_laptop_*  48x32
+(open laptop, front view, screen visible); minis 16x16; large icons 16x16; small icons 8x8;
+spr_storefront  240x160 with the sign showing STORE_NAME; dialog box uses 9-
+slice with 4 px corners (WHITE fill, INK border, DUSK inner shadow); panel style =
+same in MIST; card style = WHITE with BLUE header strip.
+Characters: 3 directions x 3 frames x 3 characters = 27 sprites. Designs in section 4.
+Laptops (must be instantly readable): NOVA X = VIOLET body, PINK/CYAN RGB key
+glow, red SALE sticker. AURA GO = SLATE body, BLUE screen, small 'AI' glyph. AURA
+PRO = darker SLATE body, YELLOW 'EVO' sticker, CYAN screen. No Intel logo
+bitmaps; use text only (check brand rules before adding any logo).
+FX: shake , flash , wipeOut/wipeIn  (8 strips), blinking cursor and prompt, bar
+tween, 'LOW BATT' bar flash. No particles.
+Scene themes: TITLE = INK background, BLUE/CYAN glow, big logo. STORE = SAND
+floor, BLUE walls, warm ORANGE accents, tidy and bright. BATTLE1 = DUSK/INK,
+ORANGE (stress). BATTLE2 = INK/BLUE, CYAN (calm power). PCDEX and RESULT =
+WHITE and BLUE with YELLOW highlights.
+QR: Track C generates assets/qr.png  (56x56, 1 px quiet border, black on white) from
+NEXT_STEP_URL after O-2 is settled.
+11. Audio and music (Track B)
+Engine: pure WebAudio synth, no sample files. 4 channels: LEAD (square, 50% duty),
+HARM (square, 25% duty via PeriodicWave), BASS (triangle), PERC (noise: kick = low-
+passed burst, hat = high-passed tick). Master gain 0.35 with a compressor. Look-
+ahead scheduler on AudioContext.currentTime  for sample-accurate loops.
+unlock()  resumes the context on first gesture. Mute persists across scenes. Cross-
+fade 300 ms between cues.
+Cue format (music.js): { id, bpm, bars, loop, key, ch:[{wave, vol, notes:
+[[midiOrNull, sixteenths], ...]}] } .
+Originality: all music must be original. Do not transcribe or imitate any specific
+existing game track. Shared brand motif CHIP MOTIF: a rising four-note phrase (root,
+major third, fifth, octave) used in MUS_TITLE, MUS_WIN and MUS_RESULT (in each
+cue's key), and inverted in the minor battle themes. This ties the themes together.
+CHIPQUEST: The Laptop Trial
+Page 19 of 23
+
+Cues: | ID | Key / BPM / Bars | Loop | Mood and form | |---|---|---|---| | MUS_TITLE | C
+major / 120 / 8 | yes | Heroic and bouncy, motif on LEAD, arpeggiated HARM | |
+MUS_STORE | F major / 100 / 16 | yes | Light shop groove, walking bass, sparse lead,
+friendly | | MUS_RIVAL | A minor / 140 / 2 | no | Cheeky sting, plays over the store
+theme, then store resumes | | MUS_BATTLE1 | D minor / 150 / 16 | yes | Tense, driving
+PERC, anxious lead; battery-draining feel | | MUS_BATTLE2 | D major / 165 / 16 | yes |
+Same bones as BATTLE1 but brighter, extra HARM layer; confident | | MUS_LOSE | D
+minor / 90 / 2 | no | Descending 3-note sting, about 2 s | | MUS_WIN | C major / 140 / 2 |
+no | Short fanfare using the motif, about 3 s | | MUS_RESULT | C major / 110 / 8 | yes |
+Calm and warm, motif softly, used for PCDEX and RESULT |
+SFX (all synthesised): | ID | Recipe | |---|---| | sfx_blip | square 880 Hz, 20 ms, quiet
+(dialogue letters) | | sfx_confirm | square 660 then 880 Hz, 80 ms total | | sfx_cancel |
+square 440 then 330 Hz, 60 ms | | sfx_step | very quiet tick, 120 Hz, 15 ms (optional per
+step) | | sfx_start | power-on chime: C5, G5, C6, 60 ms each | | sfx_card | noise flick 40
+ms plus 1.2 kHz blip | | sfx_super | arpeggio C5, E5, G5, C6, 50 ms each, square | |
+sfx_ok | single square 660 Hz, 70 ms | | sfx_weak | triangle slide 300 to 150 Hz, 200 ms |
+| sfx_heat | high-passed noise hiss with rising cutoff, 400 ms | | sfx_warn | two 1 kHz
+beeps, 80 ms each, 80 ms apart | | sfx_shutdown | triangle glide 440 to 55 Hz over 700
+ms plus noise tail | | sfx_complete | five-note rising fanfare, about 400 ms | |
+sfx_wifi_drop | three falling blips 880, 660, 440 Hz |
+Mapping: Track A calls playMusic  on scene:enter  and per the table in 5, and
+playSfx  for events in 8.9. Track B only implements the IDs in 3.6; adding IDs requires
+a logged change.
+12. Kiosk behaviour and QA
+Idle for IDLE_RESET_S seconds with no input: fade to TITLE and clear state. Title has
+an attract animation (blinking prompt, logo shimmer).
+Disable text selection, context menu, pinch/double-tap zoom, pull-to-refresh.
+Viewport meta width=device-width, initial-scale=1, user-scalable=no .
+Fullscreen button on title (hidden if unsupported).
+No external links or navigation from the game. The QR and NEXT_STEP_URL are the
+only outbound path.
+Pause the loop when the tab is hidden; clamp dt to 50 ms.
+Acceptance checklist (must all pass before submitting):
+1. Cold load to playable title under 3 s on a mid-range phone, no console errors.
+CHIPQUEST: The Laptop Trial
+Page 20 of 23
+
+2. Golden path (main) finishes in 150-200 s with average reading speed.
+3. Both starter paths work and converge at G9. All 3 personas complete.
+4. balance-sim passes I1-I5.
+5. Every dialogue page fits 2 rows and matches 7.2 exactly.
+6. Touch works end to end on a phone (D-pad, A, B, menus). Keyboard works on
+desktop.
+7. Audio unlocks on first tap, mute works, no clipping, music never stacks.
+8. Only palette colours appear (spot check with a screenshot).
+9. Idle reset works. Refresh at any scene returns to a clean title.
+10. Public URL opens in an incognito window with no login.
+Risks: font load failure (fallback monospace, check text fit), audio blocked before
+gesture (unlock on first tap), tiny phone screens (integer scale plus min scale 1), time
+overrun (cut list in 13.3).
+13. Accuracy, delivery and decisions
+13.1 Claims register (verify each on intel.com or the maker's site before submitting).
+ID
+Claim used in game
+Status
+C1
+An AI PC has CPU, GPU and NPU; CPU = fast
+response, GPU = high throughput, NPU =
+sustained AI at low power
+Per Intel Core Ultra Series 3 brief;
+verify
+C2
+Core Ultra Series 3 NPU up to 50 TOPS
+Per Intel; verify
+C3
+Core Series 3 (non-Ultra) NPU up to 17
+TOPS, AI-ready
+Per Intel launch coverage; verify
+C4
+Evo laptops are tested for fast charging,
+long battery, responsiveness on battery and
+instant wake
+Per Intel Evo page; verify
+C5
+Some AI features run on-device without
+internet; not every AI app does
+General; keep wording 'can stay'
+C6
+AMD Ryzen AI and Qualcomm Snapdragon
+X also include NPUs; Apple has a Neural
+Engine
+Verify current wording
+CHIPQUEST: The Laptop Trial
+Page 21 of 23
+
+13.2 Deploy and submit. Push the repo to GitHub Pages or Netlify, open the public URL on
+a phone and a laptop (incognito), then submit the URL at the form above before 27 Nov,
+12:00 PM (aim for 9:00 AM; the deadline is firm). Only URLs are accepted: no exe, no code
+files.
+13.3 Milestones and cut list. H0-0.5: A creates config.js and stubs; B and C commit stubs.
+H0.5-2.5: A world, dialogue, script runner; B audio engine plus MUS_TITLE, MUS_STORE,
+core SFX; C palette, tiles, characters. H2.5-4: A battle engine and UI; B battle and result
+cues; C laptops, icons, storefront, UI frames. H4-5: integration, tuning, balance-sim. H5-6:
+QA, QR, deploy. If late, cut in this order: (1) PCDEX card animation, (2) MUS_RIVAL sting,
+(3) walk animation frames (use frame 0), (4) fork path (force NOVA X), (5) persona-
+specific labels (use the student set).
+13.4 Decisions log.
+ID
+Claim used in game
+Status
+C7
+Snapdragon X laptops are Arm-based and
+some Windows apps run via emulation
+Verify; keep soft ('some')
+C8
+Macs run macOS
+Fact
+C9
+'Core Ultra X-series' naming for the
+strongest Series 3 graphics
+VERIFY or replace with 'Core Ultra 7 or
+higher'
+C10
+All battle numbers are illustrative game
+values, not benchmarks
+Stated on the card (9.3)
+ID
+Decision
+D-01
+Rival ends on AURA GO (entry AI-ready) and the
+player on AURA PRO (Core Ultra, Evo), so battle 2
+stays honest: both are AI PCs; the difference is tier
+and engine fit.
+D-02
+Soft fork: choosing AURA GO first is allowed; both
+paths converge at G9.
+D-03
+All battle numbers are illustrative and disclosed on
+the Trainer Card.
+D-04
+Fictional store name via cfg.STORE_NAME; real
+retailer branding only with permission.
+CHIPQUEST: The Laptop Trial
+Page 22 of 23
+
+Open items. O-1: final store name and permission. O-2: NEXT_STEP_URL and qr.png. O-3:
+verify claims C1-C9. O-4: English only (no Hinglish lines) unless the team decides
+otherwise.
+ID
+Decision
+D-05
+No name entry, no outdoor town (storefront card
+instead), to protect the 180 s budget.
+D-06
+Battles are deterministic (no RNG) for repeatable
+kiosk behaviour and testing.
+D-07
+Persona changes labels, intro line and card text
+only; numbers are identical.
+D-08
+Right-facing sprites are flipped left-facing sprites.
+CHIPQUEST: The Laptop Trial
+Page 23 of 23
