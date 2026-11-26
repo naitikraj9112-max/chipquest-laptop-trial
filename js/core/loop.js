@@ -4,6 +4,7 @@ import { sceneManager } from './sceneManager.js';
 import { input } from './input.js';
 import { state, resetState } from './state.js';
 import { uiArt } from '../art/ui.js';
+import { pauseMenu } from './pause.js';
 
 let canvas, ctx;
 let lastTime = 0;
@@ -80,33 +81,45 @@ function tick(now) {
   // Clamp dt to 50ms (section 12)
   if (dt > 50) dt = 50;
 
-  // Idle reset (section 12)
-  if (Date.now() - input.lastInput > cfg.IDLE_RESET_S * 1000) {
-    if (!idleResetting && sceneManager.currentId && sceneManager.currentId !== 'TITLE') {
-      idleResetting = true;
-      window.CQ?.fx?.wipeOut(cfg.WIPE_MS).then(() => {
-        resetState();
-        sceneManager.switchTo('TITLE');
-        window.CQ?.fx?.wipeIn(cfg.WIPE_MS);
-        idleResetting = false;
-      });
+  // Handle Pause toggle (Escape) when in game
+  if (input.pauseJustPressed()) {
+    if (sceneManager.currentId && sceneManager.currentId !== 'TITLE' && !idleResetting) {
+      pauseMenu.toggle();
     }
+    input.resetFrame();
+  } else if (pauseMenu.isOpen) {
+    pauseMenu.update();
+    if (window.CQ && window.CQ.fx) window.CQ.fx.update(dt);
+    input.resetFrame();
   } else {
-    idleResetting = false;
+    // Idle reset (section 12)
+    if (Date.now() - input.lastInput > cfg.IDLE_RESET_S * 1000) {
+      if (!idleResetting && sceneManager.currentId && sceneManager.currentId !== 'TITLE') {
+        idleResetting = true;
+        window.CQ?.fx?.wipeOut(cfg.WIPE_MS).then(() => {
+          resetState();
+          sceneManager.switchTo('TITLE');
+          window.CQ?.fx?.wipeIn(cfg.WIPE_MS);
+          idleResetting = false;
+        });
+      }
+    } else {
+      idleResetting = false;
+    }
+
+    // Update — scenes poll input during their update
+    sceneManager.update(dt);
+    if (window.CQ && window.CQ.fx) window.CQ.fx.update(dt);
+
+    // Reset unconsumed input flags AFTER update
+    input.resetFrame();
   }
-
-  // Update — scenes poll input during their update
-  sceneManager.update(dt);
-  if (window.CQ && window.CQ.fx) window.CQ.fx.update(dt);
-
-  // Reset unconsumed input flags AFTER update
-  input.resetFrame();
 
   // Draw
   ctx.clearRect(0, 0, cfg.LOGICAL_W, cfg.LOGICAL_H);
 
   // Apply shake to the whole scene
-  const shakeOff = window.CQ?.fx?.shakeOffset;
+  const shakeOff = (!pauseMenu.isOpen) ? window.CQ?.fx?.shakeOffset : null;
   if (shakeOff && (shakeOff.x || shakeOff.y)) {
     ctx.save();
     ctx.translate(shakeOff.x, shakeOff.y);
@@ -116,6 +129,10 @@ function tick(now) {
 
   if (shakeOff && (shakeOff.x || shakeOff.y)) {
     ctx.restore();
+  }
+
+  if (pauseMenu.isOpen) {
+    pauseMenu.draw(ctx);
   }
 
   if (window.CQ && window.CQ.fx) window.CQ.fx.draw(ctx);

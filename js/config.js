@@ -5,7 +5,7 @@ export const cfg = {
   LOGICAL_W: 240,
   LOGICAL_H: 160,
   TILE: 16,
-  STEP_MS: 140,
+  STEP_MS: 200, // 30% slower walk speed (was 140ms)
   TEXT_CPS: 45,
   TEXT_COLS: 28,
   TEXT_ROWS: 2,

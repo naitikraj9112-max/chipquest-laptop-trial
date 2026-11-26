@@ -88,7 +88,7 @@ export class BattleEngine {
     const batt = Math.ceil(move.base.batt * mult.batt);
     const heat = Math.round(move.base.heat * mult.heat);
 
-    // Determine effect type (section 8.6)
+    // Determine effect type & move comment feedback (section 8.6 + move rating commentary)
     let effectType;
     const profile = laptopData.profile;
     if (profile === 'LEGACY' && (move.type === 'AI_LIGHT' || move.type === 'AI_HEAVY')) {
@@ -99,6 +99,8 @@ export class BattleEngine {
       effectType = 'SLOW';
     } else if (profile !== 'LEGACY' && batt <= 0.45 * move.base.batt) {
       effectType = 'SUPER';
+    } else if (profile !== 'LEGACY' && prog > move.base.prog) {
+      effectType = 'BOOST';
     } else {
       effectType = 'OK';
     }
@@ -110,16 +112,44 @@ export class BattleEngine {
     actor.heat = Math.min(100, actor.heat + heat);
     actor.lastEngine = mult.engine;
 
-    // Generate effect text
+    // Generate comment tag + clear rating message (max 28 chars for crisp 1-row fit below badge)
     let effectText;
+    let commentTag;
     switch (effectType) {
-      case 'WEAK_AI': effectText = "CPU: No AI engine! It sweats..."; break;
-      case 'OK_LEGACY': effectText = "CPU: Worked, but used lots of power."; break;
-      case 'SLOW': effectText = `NPU: Slow! Needs a bigger NPU.`; break;
-      case 'SUPER':
-        effectText = mult.engine === 'GPU' ? "GPU: Super effective!" : "NPU: Super effective! Power saved!";
+      case 'WEAK_AI':
+        commentTag = { label: 'BAD MOVE!', bg: '5', fg: '4' };
+        effectText = 'No NPU! CPU burns battery!';
         break;
-      default: effectText = `${mult.engine}: It worked.`; break;
+      case 'OK_LEGACY':
+        commentTag = { label: 'COSTLY MOVE!', bg: '6', fg: '0' };
+        effectText = 'Worked, but heavy drain!';
+        break;
+      case 'SLOW':
+        commentTag = { label: 'WEAK MOVE!', bg: '6', fg: '0' };
+        effectText = 'Slow! Needs a bigger NPU.';
+        break;
+      case 'SUPER':
+        if (prog > move.base.prog) {
+          commentTag = { label: 'CRITICAL MOVE!', bg: '7', fg: '0' };
+          effectText = 'Fast NPU boost, low drain!';
+        } else {
+          commentTag = { label: 'EFFECTIVE!', bg: '9', fg: '4' };
+          effectText = mult.engine === 'GPU' ? 'GPU power saved!' : 'NPU saved lots of power!';
+        }
+        break;
+      case 'BOOST':
+        if (mult.engine === 'GPU') {
+          commentTag = { label: 'EFFECTIVE!', bg: '9', fg: '4' };
+          effectText = 'GPU boosted task speed!';
+        } else {
+          commentTag = { label: 'GOOD MOVE!', bg: 'B', fg: '4' };
+          effectText = 'CPU finished extra quick!';
+        }
+        break;
+      default:
+        commentTag = { label: 'OK MOVE', bg: 'B', fg: '4' };
+        effectText = `Steady work on ${mult.engine}.`;
+        break;
     }
 
     // Check low battery
@@ -135,6 +165,7 @@ export class BattleEngine {
       prog, batt, heat,
       effectType,
       effectText,
+      commentTag,
       wasThrottled,
       engine: mult.engine,
       actorTask: actor.task,

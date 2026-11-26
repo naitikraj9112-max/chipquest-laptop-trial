@@ -148,8 +148,8 @@ html, body {
   touch-action: none;
 }
 
-/* Fullscreen button */
-#btn-fullscreen {
+/* Fullscreen & Pause buttons */
+#btn-fullscreen, #btn-pause {
   position: fixed;
   top: 8px;
   right: 48px;

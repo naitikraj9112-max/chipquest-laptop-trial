@@ -29,8 +29,8 @@ export class BattleUI {
     this.bgStyle = battleId === 'BATTLE1' ? 'battle1' : 'battle2';
   }
 
-  queueMessage(text, autoAdvance = true) {
-    this.messageQueue.push({ text, autoAdvance });
+  queueMessage(text, autoAdvance = true, tag = null) {
+    this.messageQueue.push({ text, autoAdvance, tag });
     if (!this.currentMessage) this.advanceMessage();
   }
 
@@ -274,13 +274,32 @@ export class BattleUI {
     uiArt.drawRectOutline(ctx, 2, 114, 236, 44, cfg.PAL['1'], 1);
 
     if (this.currentMessage) {
-      // Show message
-      ctx.font = '8px "Press Start 2P", monospace';
-      ctx.fillStyle = cfg.PAL['0'];
-      ctx.textBaseline = 'top';
-      const lines = uiArt.wrapText(this.currentMessage.text, 28);
-      for (let i = 0; i < Math.min(2, lines.length); i++) {
-        ctx.fillText(lines[i], 12, 122 + i * 14);
+      // Optional move effectiveness badge + message text
+      const tag = this.currentMessage.tag;
+      if (tag) {
+        const bw = tag.label.length * 5 + 8;
+        ctx.fillStyle = cfg.PAL[tag.bg] || cfg.PAL['B'];
+        ctx.fillRect(10, 117, bw, 10);
+        uiArt.drawMiniText(ctx, tag.label, 14, 119, cfg.PAL[tag.fg] || cfg.PAL['4']);
+        ctx.font = '8px "Press Start 2P", monospace';
+        ctx.fillStyle = cfg.PAL['0'];
+        ctx.textBaseline = 'top';
+        const lines = uiArt.wrapText(this.currentMessage.text, 28);
+        if (lines.length === 1) {
+          ctx.fillText(lines[0], 10, 134);
+        } else {
+          for (let i = 0; i < Math.min(2, lines.length); i++) {
+            ctx.fillText(lines[i], 10, 130 + i * 13);
+          }
+        }
+      } else {
+        ctx.font = '8px "Press Start 2P", monospace';
+        ctx.fillStyle = cfg.PAL['0'];
+        ctx.textBaseline = 'top';
+        const lines = uiArt.wrapText(this.currentMessage.text, 28);
+        for (let i = 0; i < Math.min(2, lines.length); i++) {
+          ctx.fillText(lines[i], 12, 122 + i * 14);
+        }
       }
     } else if (this.showingMenu) {
       // 2x2 move menu

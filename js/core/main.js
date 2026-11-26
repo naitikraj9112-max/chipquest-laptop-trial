@@ -5,6 +5,8 @@ import { state, resetState } from './state.js';
 import { input } from './input.js';
 import { loop } from './loop.js';
 import { sceneManager } from './sceneManager.js';
+import { pauseMenu } from './pause.js';
+import { dialogueUI } from '../world/dialogue.js';
 import { art } from '../art/palette.js';
 import { sprites } from '../art/sprites.js';
 import { tiles } from '../art/tiles.js';
@@ -45,6 +47,8 @@ async function boot() {
     art,
     fx,
     sceneManager,
+    pauseMenu,
+    dialogueUI,
     input,
     loop,
   };
@@ -63,12 +67,23 @@ async function boot() {
   sceneManager.register('PCDEX', PcdexScene);
   sceneManager.register('RESULT', ResultScene);
 
-  // Fullscreen button shown only on TITLE if supported (section 12)
+  // Fullscreen button shown on TITLE; Pause button shown on in-game scenes
   const fsBtn = document.getElementById('btn-fullscreen');
+  const pauseBtn = document.getElementById('btn-pause');
+  if (pauseBtn) {
+    pauseBtn.addEventListener('click', e => {
+      e.preventDefault();
+      audio.unlock();
+      pauseMenu.toggle();
+    });
+  }
   bus.on('scene:enter', ({ id }) => {
     state.scene = id;
     if (fsBtn && (document.fullscreenEnabled || document.webkitFullscreenEnabled)) {
       fsBtn.style.display = id === 'TITLE' ? 'flex' : 'none';
+    }
+    if (pauseBtn) {
+      pauseBtn.style.display = id === 'TITLE' ? 'none' : 'flex';
     }
   });
 

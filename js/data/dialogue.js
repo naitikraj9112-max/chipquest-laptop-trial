@@ -75,4 +75,17 @@ export const dialogue = {
 
   // Battle intro
   BI1: { speaker: 'system', text: s('ROHAN challenges you! Finish before battery dies!') },
+
+  // Store Intel Representatives (fit cleanly on 2 rows of 28 cols)
+  REP1_1: { speaker: 'INTEL ALEX', text: s("Hi! I'm ALEX from Intel. Curious about Core Ultra?") },
+  REP1_2: { speaker: 'INTEL ALEX', text: s('Core Ultra Series 3 packs CPU, GPU and a 50 TOPS NPU!') },
+  REP1_3: { speaker: 'INTEL ALEX', text: s('The NPU runs everyday AI cool while saving battery.') },
+
+  REP2_1: { speaker: 'INTEL PRIYA', text: s("Hey! I'm PRIYA. Look for Core Ultra Evo badges here!") },
+  REP2_2: { speaker: 'INTEL PRIYA', text: s('Evo laptops are tested for battery and instant wake.') },
+  REP2_3: { speaker: 'INTEL PRIYA', text: s('On-device Core Ultra AI works offline, privately!') },
+
+  REP3_1: { speaker: 'INTEL SAM', text: s("Welcome! I'm SAM from Intel. Pick a Core Ultra tier!") },
+  REP3_2: { speaker: 'INTEL SAM', text: s('Core Ultra 5 gives great study stamina & offline AI.') },
+  REP3_3: { speaker: 'INTEL SAM', text: s('Core Ultra 7 & X boost creator AI and gaming speed!') },
 };

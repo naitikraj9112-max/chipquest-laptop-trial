@@ -12,9 +12,9 @@ import { uiArt } from '../art/ui.js';
 import { dialogue as D } from '../data/dialogue.js';
 import { laptops } from '../data/laptops.js';
 
-let player, guide, rival;
+let player, guide, rival, rep1, rep2, rep3;
 let introTriggered = false;
-let toastText = '';
+let toastLines = [];
 let toastTimer = 0;
 let laptopCardShowing = false;
 let laptopCardId = null;
@@ -44,6 +44,7 @@ export const StoreScene = {
     storePhase = 'explore';
     firstMove = true;
     laptopCardShowing = false;
+    toastTimer = 0;
 
     // Player
     player = entityManager.add(new Entity('player', 9, 12, 'up', 'spr_player'));
@@ -51,9 +52,14 @@ export const StoreScene = {
     state.player.y = 12;
     state.player.dir = 'up';
 
-    // NPCs
+    // Story NPCs
     guide = entityManager.add(new Entity('guide', 9, 5, 'down', 'spr_guide'));
     rival = entityManager.add(new Entity('rival', 11, 6, 'left', 'spr_rival'));
+
+    // Intel Representatives in the store (teach Core Ultra Series 3 AI processors)
+    rep1 = entityManager.add(new Entity('rep1', 4, 9, 'down', 'spr_rep1'));
+    rep2 = entityManager.add(new Entity('rep2', 15, 5, 'down', 'spr_rep2'));
+    rep3 = entityManager.add(new Entity('rep3', 14, 11, 'left', 'spr_rep3'));
 
     if (window.CQ) {
       window.CQ.audio.playMusic('MUS_STORE', { fadeMs: 300 });
@@ -65,8 +71,8 @@ export const StoreScene = {
     camera.follow(player);
     dialogueUI.update(dt);
 
-    // Toast timer
-    if (toastTimer > 0) {
+    // Toast timer (only tick down when unobstructed)
+    if (toastTimer > 0 && !dialogueUI.isActive && !laptopCardShowing) {
       toastTimer -= dt;
     }
 
@@ -98,10 +104,14 @@ export const StoreScene = {
     if (!player.moving) {
       const dir = input.dir();
       if (dir) {
-        // Show hint on first move
+        // Show device-appropriate controls hint on first move
         if (firstMove) {
           firstMove = false;
-          showToast('D-PAD: MOVE  A: TALK', 3000);
+          if (input.isTouch) {
+            showToast(['D-PAD: MOVE   A: TALK / OK', 'B: BACK   PAUSE: MENU'], 3500);
+          } else {
+            showToast(['ARROWS: MOVE   Z: INTERACT', 'X: BACK   ESC: PAUSE'], 3500);
+          }
         }
         player.startMove(dir, tilemap, entityManager.entities);
         state.player.x = player.col;
@@ -146,17 +156,19 @@ export const StoreScene = {
     // Dialogue / script
     dialogueUI.draw(ctx);
 
-    // Toast
-    if (toastTimer > 0) {
-      const tw = toastText.length * 8 + 16;
+    // Toast (placed high so it doesn't collide with dialogue box)
+    if (toastTimer > 0 && !dialogueUI.isActive && !laptopCardShowing) {
+      const maxChars = Math.max(...toastLines.map(l => l.length));
+      const tw = maxChars * 5 + 16;
+      const th = toastLines.length * 10 + 10;
       const tx = Math.floor((240 - tw) / 2);
+      const ty = 12;
       ctx.fillStyle = cfg.PAL['0'];
-      ctx.fillRect(tx, 68, tw, 24);
-      uiArt.drawRectOutline(ctx, tx, 68, tw, 24, cfg.PAL['7'], 1);
-      ctx.font = '8px "Press Start 2P", monospace';
-      ctx.fillStyle = cfg.PAL['7'];
-      ctx.textBaseline = 'top';
-      ctx.fillText(toastText, tx + 8, 76);
+      ctx.fillRect(tx, ty, tw, th);
+      uiArt.drawRectOutline(ctx, tx, ty, tw, th, cfg.PAL['7'], 1);
+      for (let i = 0; i < toastLines.length; i++) {
+        uiArt.drawMiniText(ctx, toastLines[i], 120, ty + 6 + i * 10, cfg.PAL['7'], { align: 'center' });
+      }
     }
   },
 
@@ -177,9 +189,16 @@ function drawMiniSprite(ctx, spriteId, col, row) {
   }
 }
 
-function showToast(text, durationMs = 3000) {
-  toastText = text;
+function showToast(textOrLines, durationMs = 3000) {
+  toastLines = Array.isArray(textOrLines) ? textOrLines : [textOrLines];
   toastTimer = durationMs;
+}
+
+function oppositeDir(dir) {
+  if (dir === 'up') return 'down';
+  if (dir === 'down') return 'up';
+  if (dir === 'left') return 'right';
+  return 'left';
 }
 
 function handleInteraction() {
@@ -195,11 +214,28 @@ function handleInteraction() {
   const targetEntity = entityManager.entities.find(e => e.col === targetCol && e.row === targetRow && e.visible);
   if (targetEntity) {
     if (targetEntity.id === 'guide' && state.flags.guideMet) {
+      targetEntity.face(oppositeDir(player.dir));
       dialogueUI.show([D.G4]); // Repeat last line
       return;
     }
     if (targetEntity.id === 'rival' && state.flags.guideMet) {
+      targetEntity.face(oppositeDir(player.dir));
       dialogueUI.show([D.R2]); // Repeat last line
+      return;
+    }
+    if (targetEntity.id === 'rep1') {
+      targetEntity.face(oppositeDir(player.dir));
+      dialogueUI.show([D.REP1_1, D.REP1_2, D.REP1_3]);
+      return;
+    }
+    if (targetEntity.id === 'rep2') {
+      targetEntity.face(oppositeDir(player.dir));
+      dialogueUI.show([D.REP2_1, D.REP2_2, D.REP2_3]);
+      return;
+    }
+    if (targetEntity.id === 'rep3') {
+      targetEntity.face(oppositeDir(player.dir));
+      dialogueUI.show([D.REP3_1, D.REP3_2, D.REP3_3]);
       return;
     }
   }
@@ -303,7 +339,8 @@ function drawLaptopCard(ctx, id) {
   }
 
   // Choice line
-  uiArt.drawMiniText(ctx, '[A] TAKE IT   [B] LOOK AGAIN', px + 6, py + 84, cfg.PAL['B']);
+  const cardPrompt = input.isTouch ? '[A] TAKE IT   [B] LOOK AGAIN' : '[Z] TAKE IT   [X] LOOK AGAIN';
+  uiArt.drawMiniText(ctx, cardPrompt, px + 6, py + 84, cfg.PAL['B']);
 }
 
 function pickLaptop(id) {

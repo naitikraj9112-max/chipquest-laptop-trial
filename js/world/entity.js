@@ -70,6 +70,9 @@ export class Entity {
       const t = Math.min(1, this.moveTimer / cfg.STEP_MS);
       this.x = this.fromX + (this.toX - this.fromX) * t;
       this.y = this.fromY + (this.toY - this.fromY) * t;
+      // Alternate two distinct walk frames smoothly within each step
+      const altFrame = this.walkFrame === 1 ? 2 : 1;
+      this.frame = t < 0.5 ? this.walkFrame : altFrame;
       if (t >= 1) {
         this.moving = false;
         this.x = this.toX;

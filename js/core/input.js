@@ -8,6 +8,7 @@ let aPressed = false;
 let bPressed = false;
 let aPressedThisFrame = false;
 let bPressedThisFrame = false;
+let pausePressedThisFrame = false;
 let anyInputThisFrame = false;
 let clickLogicalPos = null;
 let lastInputTime = Date.now();
@@ -25,6 +26,10 @@ function keyToDir(key) {
 export const input = {
   get isTouch() { return isTouchDevice; },
   get lastInput() { return lastInputTime; },
+
+  markActive() {
+    lastInputTime = Date.now();
+  },
 
   dir() {
     if (keysDown['ArrowUp'] || keysDown['w'] || keysDown['W'] || touchDpad === 'up') return 'up';
@@ -52,6 +57,12 @@ export const input = {
     return v;
   },
 
+  pauseJustPressed() {
+    const v = pausePressedThisFrame;
+    pausePressedThisFrame = false;
+    return v;
+  },
+
   consumeClick() {
     const pos = clickLogicalPos;
     clickLogicalPos = null;
@@ -64,9 +75,19 @@ export const input = {
     return v;
   },
 
+  flush() {
+    aPressedThisFrame = false;
+    bPressedThisFrame = false;
+    pausePressedThisFrame = false;
+    dirJustPressedVal = null;
+    clickLogicalPos = null;
+    anyInputThisFrame = false;
+  },
+
   resetFrame() {
     aPressedThisFrame = false;
     bPressedThisFrame = false;
+    pausePressedThisFrame = false;
     dirJustPressedVal = null;
     clickLogicalPos = null;
     anyInputThisFrame = false;
@@ -93,9 +114,13 @@ export const input = {
         aPressed = true;
         if (window.CQ && window.CQ.audio) window.CQ.audio.unlock();
       }
-      if (['x', 'X', 'Escape'].includes(e.key) && !e.repeat) {
+      if ((e.key === 'x' || e.key === 'X') && !e.repeat) {
         bPressedThisFrame = true;
         bPressed = true;
+        if (window.CQ && window.CQ.audio) window.CQ.audio.unlock();
+      }
+      if (e.key === 'Escape' && !e.repeat) {
+        pausePressedThisFrame = true;
         if (window.CQ && window.CQ.audio) window.CQ.audio.unlock();
       }
       if ((e.key === 'm' || e.key === 'M') && !e.repeat) {

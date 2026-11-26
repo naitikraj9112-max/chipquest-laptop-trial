@@ -140,10 +140,10 @@ export function createBattleScene(defaultBattleId) {
       if (window.CQ) window.CQ.audio.playSfx('sfx_heat');
     }
 
-    ui.queueMessage(playerResult.effectText);
+    ui.queueMessage(playerResult.effectText, true, playerResult.commentTag);
 
     if (window.CQ) {
-      const sfxMap = { SUPER: 'sfx_super', OK: 'sfx_ok', SLOW: 'sfx_weak', WEAK_AI: 'sfx_weak', OK_LEGACY: 'sfx_ok' };
+      const sfxMap = { SUPER: 'sfx_super', BOOST: 'sfx_super', OK: 'sfx_ok', SLOW: 'sfx_weak', WEAK_AI: 'sfx_weak', OK_LEGACY: 'sfx_ok' };
       window.CQ.audio.playSfx(sfxMap[playerResult.effectType] || 'sfx_ok');
     }
 
@@ -205,10 +205,10 @@ export function createBattleScene(defaultBattleId) {
       if (window.CQ) window.CQ.audio.playSfx('sfx_heat');
     }
 
-    ui.queueMessage(rivalResult.effectText);
+    ui.queueMessage(rivalResult.effectText, true, rivalResult.commentTag);
 
     if (window.CQ) {
-      const sfxMap = { SUPER: 'sfx_super', OK: 'sfx_ok', SLOW: 'sfx_weak', WEAK_AI: 'sfx_weak', OK_LEGACY: 'sfx_ok' };
+      const sfxMap = { SUPER: 'sfx_super', BOOST: 'sfx_super', OK: 'sfx_ok', SLOW: 'sfx_weak', WEAK_AI: 'sfx_weak', OK_LEGACY: 'sfx_ok' };
       window.CQ.audio.playSfx(sfxMap[rivalResult.effectType] || 'sfx_ok');
     }
 

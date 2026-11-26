@@ -167,7 +167,8 @@ export const PcdexScene = {
 
         // Navigation hint
         const prevLabel = currentCard > 0 ? '< PREV' : '      ';
-        uiArt.drawMiniText(ctx, `${prevLabel}    [A] NEXT >`, 120, 144, cfg.PAL['B'], { align: 'center' });
+        const nextBtn = input.isTouch ? '[A] NEXT >' : '[Z] NEXT >';
+        uiArt.drawMiniText(ctx, `${prevLabel}    ${nextBtn}`, 120, 144, cfg.PAL['B'], { align: 'center' });
       } else {
         // Banner: "Windows apps + Evo testing"
         const bx = 16, by = 38, bw = 208, bh = 54;
@@ -185,7 +186,8 @@ export const PcdexScene = {
         ctx.fillText('Evo testing', 120, by + 37);
         ctx.textAlign = 'left';
 
-        uiArt.drawMiniText(ctx, '[A] CONTINUE', 120, 102, cfg.PAL['B'], { align: 'center' });
+        const contLabel = input.isTouch ? '[A] CONTINUE' : '[Z] CONTINUE';
+        uiArt.drawMiniText(ctx, contLabel, 120, 102, cfg.PAL['B'], { align: 'center' });
       }
     }
 
