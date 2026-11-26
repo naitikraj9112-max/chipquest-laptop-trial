@@ -6,12 +6,15 @@ import { sfxDefs } from './sfx.js';
 let actx = null;
 let masterGain = null;
 let compressor = null;
+let square25Wave = null;
 let muted = false;
 let unlocked = false;
 let currentMusicId = null;
+let desiredMusicId = null;
 let currentMusicNodes = [];
 let currentMusicGain = null;
 let schedulerTimer = null;
+let musicPlayTimer = null;
 
 function ensureContext() {
   if (!actx) {
@@ -24,6 +27,20 @@ function ensureContext() {
     masterGain = actx.createGain();
     masterGain.gain.value = muted ? 0 : 0.35;
     masterGain.connect(compressor);
+
+    // 25% pulse-width PeriodicWave for HARM channel (section 11)
+    try {
+      const harmonics = 32;
+      const real = new Float32Array(harmonics + 1);
+      const imag = new Float32Array(harmonics + 1);
+      for (let n = 1; n <= harmonics; n++) {
+        real[n] = (2 / (n * Math.PI)) * Math.sin(n * Math.PI * 0.25);
+        imag[n] = 0;
+      }
+      square25Wave = actx.createPeriodicWave(real, imag);
+    } catch(e) {
+      square25Wave = null;
+    }
   }
   return actx;
 }
@@ -102,7 +119,13 @@ function playMusicCue(cue, fadeMs = 300) {
           } else {
             try {
               const osc = ctx.createOscillator();
-              osc.type = (wave === 'triangle') ? 'triangle' : 'square';
+              if (wave === 'triangle') {
+                osc.type = 'triangle';
+              } else if (wave === 'square25' && square25Wave) {
+                osc.setPeriodicWave(square25Wave);
+              } else {
+                osc.type = 'square';
+              }
               osc.frequency.setValueAtTime(midiToFreq(midiOrNull), time);
               const envGain = ctx.createGain();
               envGain.gain.setValueAtTime(vol, time);
@@ -142,30 +165,43 @@ function playMusicCue(cue, fadeMs = 300) {
 
 export const audio = {
   unlock() {
-    if (unlocked) return;
     ensureContext();
-    if (actx.state === 'suspended') actx.resume();
+    if (actx.state === 'suspended') {
+      actx.resume().catch(() => {});
+    }
     unlocked = true;
   },
 
   playMusic(id, opts = {}) {
-    const fadeMs = opts.fadeMs || 300;
+    const fadeMs = opts.fadeMs !== undefined ? opts.fadeMs : 300;
     ensureContext();
+    desiredMusicId = id;
     if (currentMusicId === id) return;
+    if (musicPlayTimer) {
+      clearTimeout(musicPlayTimer);
+      musicPlayTimer = null;
+    }
     stopCurrentMusic(fadeMs);
     const cue = musicCues[id];
     if (!cue) { console.warn('No music cue:', id); return; }
+    currentMusicId = id; // reserve the slot immediately
     if (!muted) {
-      setTimeout(() => {
-        if (currentMusicId === null) { // only play if nothing started in the meantime
+      const delay = currentMusicGain ? fadeMs + 20 : 10;
+      musicPlayTimer = setTimeout(() => {
+        musicPlayTimer = null;
+        if (currentMusicId === id && !muted) {
           playMusicCue(cue, fadeMs);
         }
-      }, fadeMs + 20);
+      }, delay);
     }
-    currentMusicId = id; // reserve the slot immediately
   },
 
   stopMusic(fadeMs = 300) {
+    desiredMusicId = null;
+    if (musicPlayTimer) {
+      clearTimeout(musicPlayTimer);
+      musicPlayTimer = null;
+    }
     stopCurrentMusic(fadeMs);
   },
 
@@ -194,16 +230,30 @@ export const audio = {
   },
 
   setMuted(val) {
-    muted = val;
+    muted = !!val;
     if (masterGain) {
       masterGain.gain.value = muted ? 0 : 0.35;
     }
     if (muted) {
+      if (musicPlayTimer) {
+        clearTimeout(musicPlayTimer);
+        musicPlayTimer = null;
+      }
       stopCurrentMusic(0);
+    } else if (desiredMusicId) {
+      const cue = musicCues[desiredMusicId];
+      if (cue && cue.loop) {
+        currentMusicId = null;
+        this.playMusic(desiredMusicId, { fadeMs: 150 });
+      }
     }
   },
 
   isMuted() {
     return muted;
+  },
+
+  get currentMusicId() {
+    return currentMusicId;
   }
 };

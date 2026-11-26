@@ -64,7 +64,7 @@ const MUS_TITLE = {
       N(C4,2), N(E4,2), N(G4,2), N(E4,2), N(C4,2), N(E4,2), N(G4,2), N(E4,2),
       // Bar 7-8: F → G → C
       N(F3,2), N(A3,2), N(C4,2), N(A3,2), N(G3,2), N(B3,2), N(D4,2), N(B3,2),
-      N(C4,2), N(E4,2), N(G4,2), N(E4,2), N(C4,4), R(4), R(4),
+      N(C4,2), N(E4,2), N(G4,2), N(E4,2), N(C4,4), R(4),
     ]},
     // BASS – triangle
     { wave: 'triangle', vol: 0.8, notes: [
@@ -159,7 +159,7 @@ const MUS_STORE = {
     // PERC – light groove
     { wave: 'noise', vol: 0.35, notes: [
       ...Array(16).fill(null).flatMap(() => [
-        N(1,4), N(2,4), N(1,2), N(2,2), N(2,4), N(2,4),
+        N(1,4), N(2,4), N(1,2), N(2,2), N(2,4),
       ]),
     ]},
   ],

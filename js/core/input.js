@@ -3,14 +3,24 @@ import { cfg } from '../config.js';
 
 const keysDown = {};
 let touchDpad = null; // 'up'|'down'|'left'|'right' or null
+let dirJustPressedVal = null;
 let aPressed = false;
 let bPressed = false;
 let aPressedThisFrame = false;
 let bPressedThisFrame = false;
 let anyInputThisFrame = false;
+let clickLogicalPos = null;
 let lastInputTime = Date.now();
 let isTouchDevice = false;
-let dpadEl, aBtnEl, bBtnEl, muteEl;
+let dpadEl, aBtnEl, bBtnEl, muteEl, canvasRef;
+
+function keyToDir(key) {
+  if (key === 'ArrowUp' || key === 'w' || key === 'W') return 'up';
+  if (key === 'ArrowDown' || key === 's' || key === 'S') return 'down';
+  if (key === 'ArrowLeft' || key === 'a' || key === 'A') return 'left';
+  if (key === 'ArrowRight' || key === 'd' || key === 'D') return 'right';
+  return null;
+}
 
 export const input = {
   get isTouch() { return isTouchDevice; },
@@ -22,6 +32,12 @@ export const input = {
     if (keysDown['ArrowLeft'] || keysDown['a'] || keysDown['A'] || touchDpad === 'left') return 'left';
     if (keysDown['ArrowRight'] || keysDown['d'] || keysDown['D'] || touchDpad === 'right') return 'right';
     return null;
+  },
+
+  dirJustPressed() {
+    const v = dirJustPressedVal;
+    dirJustPressedVal = null;
+    return v;
   },
 
   aJustPressed() {
@@ -36,6 +52,12 @@ export const input = {
     return v;
   },
 
+  consumeClick() {
+    const pos = clickLogicalPos;
+    clickLogicalPos = null;
+    return pos;
+  },
+
   anyInput() {
     const v = anyInputThisFrame;
     anyInputThisFrame = false;
@@ -45,26 +67,40 @@ export const input = {
   resetFrame() {
     aPressedThisFrame = false;
     bPressedThisFrame = false;
+    dirJustPressedVal = null;
+    clickLogicalPos = null;
     anyInputThisFrame = false;
   },
 
   init(canvas) {
+    canvasRef = canvas;
     // Keyboard
     window.addEventListener('keydown', e => {
+      const wasDown = keysDown[e.key];
       keysDown[e.key] = true;
       lastInputTime = Date.now();
-      anyInputThisFrame = true;
+      if (e.key !== 'm' && e.key !== 'M') {
+        anyInputThisFrame = true;
+      }
 
-      if (['z', 'Z', 'Enter', ' '].includes(e.key)) {
+      const d = keyToDir(e.key);
+      if (d && !wasDown) {
+        dirJustPressedVal = d;
+      }
+
+      if (['z', 'Z', 'Enter', ' '].includes(e.key) && !e.repeat) {
         aPressedThisFrame = true;
         aPressed = true;
+        if (window.CQ && window.CQ.audio) window.CQ.audio.unlock();
       }
-      if (['x', 'X', 'Escape'].includes(e.key)) {
+      if (['x', 'X', 'Escape'].includes(e.key) && !e.repeat) {
         bPressedThisFrame = true;
         bPressed = true;
+        if (window.CQ && window.CQ.audio) window.CQ.audio.unlock();
       }
-      if (e.key === 'm' || e.key === 'M') {
+      if ((e.key === 'm' || e.key === 'M') && !e.repeat) {
         if (window.CQ && window.CQ.audio) {
+          window.CQ.audio.unlock();
           window.CQ.audio.setMuted(!window.CQ.audio.isMuted());
           const muteBtn = document.getElementById('btn-mute');
           if (muteBtn) muteBtn.textContent = window.CQ.audio.isMuted() ? '🔇' : '🔊';
@@ -89,9 +125,16 @@ export const input = {
     // Setup touch controls (hidden by default)
     setupTouchControls();
 
-    // Canvas tap = A button (for dialogue advancement on touch, section 3.3)
+    // Canvas tap/click = A button + logical coordinates for direct button/move hits (section 3.3)
     canvas.addEventListener('click', e => {
       e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        clickLogicalPos = {
+          x: Math.floor(((e.clientX - rect.left) / rect.width) * cfg.LOGICAL_W),
+          y: Math.floor(((e.clientY - rect.top) / rect.height) * cfg.LOGICAL_H),
+        };
+      }
       aPressedThisFrame = true;
       aPressed = true;
       lastInputTime = Date.now();
@@ -124,6 +167,7 @@ function setupTouchControls() {
       btn.addEventListener('touchstart', e => {
         e.preventDefault();
         touchDpad = dir;
+        dirJustPressedVal = dir;
         lastInputTime = Date.now();
         anyInputThisFrame = true;
         if (window.CQ && window.CQ.audio) window.CQ.audio.unlock();

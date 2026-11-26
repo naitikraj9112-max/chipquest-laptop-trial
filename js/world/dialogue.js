@@ -19,16 +19,21 @@ export const dialogueUI = {
   get isActive() { return active; },
   get isChoice() { return choiceMode; },
 
-  // Show dialogue pages sequentially
+  // Show dialogue pages sequentially (auto-paginating entries > 2 rows per section 7.1)
   show(dialogueEntries, callback) {
     if (!Array.isArray(dialogueEntries)) dialogueEntries = [dialogueEntries];
-    pages = dialogueEntries.map(e => {
-      if (typeof e === 'string') {
-        const d = window.CQ?.state ? null : null;
-        return { speaker: '', text: e };
+    pages = [];
+    for (const raw of dialogueEntries) {
+      const entry = typeof raw === 'string'
+        ? { speaker: '', text: raw }
+        : { speaker: raw.speaker || '', text: raw.text || '' };
+      const wrapped = uiArt.wrapText(entry.text, cfg.TEXT_COLS);
+      for (let i = 0; i < wrapped.length; i += cfg.TEXT_ROWS) {
+        const chunk = wrapped.slice(i, i + cfg.TEXT_ROWS);
+        pages.push({ speaker: entry.speaker, text: chunk.join('\n') });
       }
-      return e;
-    });
+    }
+    if (pages.length === 0) pages.push({ speaker: '', text: '' });
     pageIndex = 0;
     charIndex = 0;
     charTimer = 0;
@@ -144,15 +149,13 @@ export const dialogueUI = {
     const text = page.text || page;
     const displayText = text.substring(0, charIndex);
 
-    // Draw the textbox
+    // Draw the textbox using art/ui style (WHITE fill, INK border, DUSK inner shadow)
     const bx = 0, by = 112, bw = 240, bh = 48;
 
-    // Box (WHITE fill, INK border, DUSK inner shadow)
     ctx.fillStyle = cfg.PAL['4'];
     ctx.fillRect(bx, by, bw, bh);
-    ctx.strokeStyle = cfg.PAL['0'];
-    ctx.lineWidth = 2;
-    ctx.strokeRect(bx + 1, by + 1, bw - 2, bh - 2);
+    uiArt.drawRectOutline(ctx, bx, by, bw, bh, cfg.PAL['0'], 2);
+    uiArt.drawRectOutline(ctx, bx + 2, by + 2, bw - 4, bh - 4, cfg.PAL['1'], 1);
 
     // Speaker nameplate
     if (speaker && speaker !== 'narrator' && speaker !== 'system') {
@@ -165,31 +168,9 @@ export const dialogueUI = {
       ctx.fillText(speaker, 12, by - 10);
     }
 
-    // Text with word wrap
-    const lines = uiArt.wrapText(displayText, cfg.TEXT_COLS);
+    // Choice menu vs wrapped text
     ctx.font = '8px "Press Start 2P", monospace';
-    ctx.fillStyle = cfg.PAL['0'];
     ctx.textBaseline = 'top';
-    for (let i = 0; i < Math.min(cfg.TEXT_ROWS, lines.length); i++) {
-      ctx.fillText(lines[i], 12, 122 + i * 14);
-    }
-
-    // Blinking more icon
-    if (waitingForInput && !choiceMode) {
-      if (Math.floor(Date.now() / 400) % 2 === 0) {
-        // Draw small arrow
-        ctx.fillStyle = cfg.PAL['0'];
-        const ax = 224, ay = 142;
-        ctx.beginPath();
-        ctx.moveTo(ax, ay);
-        ctx.lineTo(ax + 8, ay);
-        ctx.lineTo(ax + 4, ay + 5);
-        ctx.closePath();
-        ctx.fill();
-      }
-    }
-
-    // Choice menu
     if (choiceMode && waitingForInput) {
       for (let i = 0; i < choices.length; i++) {
         const cy = 122 + i * 14;
@@ -199,6 +180,30 @@ export const dialogueUI = {
         }
         ctx.fillStyle = cfg.PAL['0'];
         ctx.fillText(choices[i], 24, cy);
+      }
+    } else {
+      const lines = uiArt.wrapText(displayText, cfg.TEXT_COLS);
+      ctx.fillStyle = cfg.PAL['0'];
+      for (let i = 0; i < Math.min(cfg.TEXT_ROWS, lines.length); i++) {
+        ctx.fillText(lines[i], 12, 122 + i * 14);
+      }
+    }
+
+    // Blinking more icon at (224, 142)
+    if (waitingForInput && !choiceMode) {
+      if (Math.floor(Date.now() / 400) % 2 === 0) {
+        if (window.CQ && window.CQ.art) {
+          window.CQ.art.draw(ctx, 'icon_more', 224, 142);
+        } else {
+          ctx.fillStyle = cfg.PAL['0'];
+          const ax = 224, ay = 142;
+          ctx.beginPath();
+          ctx.moveTo(ax, ay);
+          ctx.lineTo(ax + 8, ay);
+          ctx.lineTo(ax + 4, ay + 5);
+          ctx.closePath();
+          ctx.fill();
+        }
       }
     }
   },

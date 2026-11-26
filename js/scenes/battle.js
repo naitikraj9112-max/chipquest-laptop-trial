@@ -12,11 +12,20 @@ export function createBattleScene(defaultBattleId) {
   let engine = null;
   let ui = null;
   let battleId = null;
-  let phase = 'intro';
+  let phase = 'intro'; // intro, battle, animating, wifi_dialogue, battle_end_wait, transitioning, post_battle2
   let battleOverTimer = 0;
+  let musicTimer = null;
+
+  function clearMusicTimer() {
+    if (musicTimer) {
+      clearTimeout(musicTimer);
+      musicTimer = null;
+    }
+  }
 
   return {
     enter(params = {}) {
+      clearMusicTimer();
       battleId = params.battleId || defaultBattleId;
       engine = new BattleEngine(battleId);
       ui = new BattleUI(engine, battleId);
@@ -41,20 +50,28 @@ export function createBattleScene(defaultBattleId) {
       ui.update(dt);
       dialogueUI.update(dt);
 
+      if (phase === 'transitioning') {
+        return;
+      }
+
       if (phase === 'wifi_dialogue') {
         if (input.aJustPressed()) {
           dialogueUI.handleA();
-          if (!dialogueUI.isActive) {
-            phase = 'battle';
-            ui.showingMenu = true;
-          }
         }
         return;
       }
 
-      if (phase === 'done') {
+      if (phase === 'post_battle2') {
+        if (input.aJustPressed()) {
+          dialogueUI.handleA();
+        }
+        return;
+      }
+
+      if (phase === 'battle_end_wait') {
         battleOverTimer += dt;
-        if (input.aJustPressed() || battleOverTimer > 2000) {
+        if (input.aJustPressed() || battleOverTimer > 1500) {
+          phase = 'transitioning';
           transitionOut();
         }
         return;
@@ -65,12 +82,27 @@ export function createBattleScene(defaultBattleId) {
         return;
       }
 
-      const dir = input.dir();
+      const click = input.consumeClick();
+      if (click) {
+        if (click.y >= 112) {
+          const col = click.x < 120 ? 0 : 1;
+          const row = click.y < 136 ? 0 : 1;
+          ui.selectedMove = row * 2 + col;
+          if (window.CQ) window.CQ.audio.playSfx('sfx_confirm');
+          executeTurn(ui.getSelectedMoveId());
+        } else {
+          input.aJustPressed(); // consume stray upper-screen tap
+        }
+        return;
+      }
+
+      const dir = input.dirJustPressed();
       if (dir) ui.handleInput(dir);
 
       if (input.aJustPressed()) {
         const result = ui.handleA();
         if (result === 'move_selected') {
+          if (window.CQ) window.CQ.audio.playSfx('sfx_confirm');
           executeTurn(ui.getSelectedMoveId());
         }
       }
@@ -79,21 +111,27 @@ export function createBattleScene(defaultBattleId) {
     draw(ctx) {
       if (!ui) return;
       ui.draw(ctx);
-      if (phase === 'wifi_dialogue') {
+      if (phase === 'wifi_dialogue' || phase === 'post_battle2') {
         dialogueUI.draw(ctx);
       }
     },
 
     exit() {
+      clearMusicTimer();
       dialogueUI.close();
     }
   };
 
   function executeTurn(playerMoveId) {
+    phase = 'animating';
     ui.showingMenu = false;
 
     const playerResult = engine.playerAct(playerMoveId);
-    if (!playerResult) return;
+    if (!playerResult) {
+      phase = 'battle';
+      ui.showingMenu = true;
+      return;
+    }
 
     ui.queueMessage(`${engine.player.name} used ${playerResult.label}!`);
 
@@ -118,7 +156,8 @@ export function createBattleScene(defaultBattleId) {
       ui.queueMessage(`${engine.player.name} finished the task!`);
       if (window.CQ) {
         window.CQ.audio.playSfx('sfx_complete');
-        setTimeout(() => window.CQ.audio.playMusic('MUS_WIN', { fadeMs: 100 }), 500);
+        clearMusicTimer();
+        musicTimer = setTimeout(() => window.CQ.audio.playMusic('MUS_WIN', { fadeMs: 100 }), 500);
       }
       if (battleId === 'BATTLE2') {
         state.flags.b2Winner = 'player';
@@ -127,7 +166,11 @@ export function createBattleScene(defaultBattleId) {
       } else {
         state.flags.b1Winner = 'player';
       }
-      ui.onMessagesDone = () => { phase = 'done'; };
+      ui.onMessagesDone = () => {
+        ui.showingMenu = false;
+        battleOverTimer = 0;
+        phase = 'battle_end_wait';
+      };
       return;
     }
 
@@ -136,10 +179,15 @@ export function createBattleScene(defaultBattleId) {
       ui.playerShake = 500;
       if (window.CQ) {
         window.CQ.audio.playSfx('sfx_shutdown');
-        setTimeout(() => window.CQ.audio.playMusic('MUS_LOSE', { fadeMs: 100 }), 800);
+        clearMusicTimer();
+        musicTimer = setTimeout(() => window.CQ.audio.playMusic('MUS_LOSE', { fadeMs: 100 }), 800);
       }
       if (battleId === 'BATTLE1') state.flags.b1Winner = 'rival';
-      ui.onMessagesDone = () => { phase = 'done'; };
+      ui.onMessagesDone = () => {
+        ui.showingMenu = false;
+        battleOverTimer = 0;
+        phase = 'battle_end_wait';
+      };
       return;
     }
 
@@ -154,9 +202,15 @@ export function createBattleScene(defaultBattleId) {
 
     if (rivalResult.wasThrottled) {
       ui.queueMessage(`${engine.rival.name} is too hot! Slowing down!`);
+      if (window.CQ) window.CQ.audio.playSfx('sfx_heat');
     }
 
     ui.queueMessage(rivalResult.effectText);
+
+    if (window.CQ) {
+      const sfxMap = { SUPER: 'sfx_super', OK: 'sfx_ok', SLOW: 'sfx_weak', WEAK_AI: 'sfx_weak', OK_LEGACY: 'sfx_ok' };
+      window.CQ.audio.playSfx(sfxMap[rivalResult.effectType] || 'sfx_ok');
+    }
 
     if (rivalResult.lowBatt) {
       ui.queueMessage(`${engine.rival.name}: LOW BATTERY!`);
@@ -167,10 +221,15 @@ export function createBattleScene(defaultBattleId) {
       ui.queueMessage(`${engine.rival.name} finished the task!`);
       if (window.CQ) {
         window.CQ.audio.playSfx('sfx_complete');
-        setTimeout(() => window.CQ.audio.playMusic('MUS_LOSE', { fadeMs: 100 }), 500);
+        clearMusicTimer();
+        musicTimer = setTimeout(() => window.CQ.audio.playMusic('MUS_LOSE', { fadeMs: 100 }), 500);
       }
       if (battleId === 'BATTLE1') state.flags.b1Winner = 'rival';
-      ui.onMessagesDone = () => { phase = 'done'; };
+      ui.onMessagesDone = () => {
+        ui.showingMenu = false;
+        battleOverTimer = 0;
+        phase = 'battle_end_wait';
+      };
       return;
     }
 
@@ -179,7 +238,8 @@ export function createBattleScene(defaultBattleId) {
       ui.rivalShake = 500;
       if (window.CQ) {
         window.CQ.audio.playSfx('sfx_shutdown');
-        setTimeout(() => window.CQ.audio.playMusic('MUS_WIN', { fadeMs: 100 }), 800);
+        clearMusicTimer();
+        musicTimer = setTimeout(() => window.CQ.audio.playMusic('MUS_WIN', { fadeMs: 100 }), 800);
       }
       if (battleId === 'BATTLE1') state.flags.b1Winner = 'player';
       else {
@@ -187,7 +247,11 @@ export function createBattleScene(defaultBattleId) {
         state.flags.b2PlayerBatt = engine.player.batt;
         state.flags.b2Turns = engine.turn + 1;
       }
-      ui.onMessagesDone = () => { phase = 'done'; };
+      ui.onMessagesDone = () => {
+        ui.showingMenu = false;
+        battleOverTimer = 0;
+        phase = 'battle_end_wait';
+      };
       return;
     }
 
@@ -201,33 +265,40 @@ export function createBattleScene(defaultBattleId) {
       ui.showWifiDrop();
       if (window.CQ) window.CQ.audio.playSfx('sfx_wifi_drop');
       phase = 'wifi_dialogue';
+      ui.showingMenu = false;
       dialogueUI.show([D.W1, D.W2], () => {
+        engine.phase = 'player_choose';
         phase = 'battle';
         ui.showingMenu = true;
       });
       return;
     }
 
+    phase = 'battle';
     ui.showingMenu = true;
   }
 
   function transitionOut() {
     if (!window.CQ) return;
+    clearMusicTimer();
     window.CQ.fx.wipeOut(cfg.WIPE_MS).then(() => {
       if (battleId === 'BATTLE1') {
         window.CQ.sceneManager.switchTo('STORE');
+        window.CQ.fx.wipeIn(cfg.WIPE_MS);
       } else {
-        // After BATTLE2: post-battle dialogue then PCDEX
+        // After BATTLE2: post-battle dialogue R6, G17-G20 then PCDEX (section 7.4)
+        phase = 'post_battle2';
         window.CQ.audio.playMusic('MUS_RESULT', { fadeMs: 300 });
         const postPages = [D.R6, D.G17, D.G18, D.G19, D.G20];
         dialogueUI.show(postPages, () => {
+          phase = 'transitioning';
           window.CQ.fx.wipeOut(cfg.WIPE_MS).then(() => {
             window.CQ.sceneManager.switchTo('PCDEX');
             window.CQ.fx.wipeIn(cfg.WIPE_MS);
           });
         });
+        window.CQ.fx.wipeIn(cfg.WIPE_MS);
       }
-      window.CQ.fx.wipeIn(cfg.WIPE_MS);
     });
   }
 }

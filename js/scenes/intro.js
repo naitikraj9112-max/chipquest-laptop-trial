@@ -44,36 +44,51 @@ export const IntroScene = {
     ctx.fillStyle = cfg.PAL['0'];
     ctx.fillRect(0, 0, cfg.LOGICAL_W, cfg.LOGICAL_H);
 
-    // Draw storefront (simplified - building with sign)
-    // Sky
+    // Sky & roof trim
     ctx.fillStyle = cfg.PAL['1'];
-    ctx.fillRect(0, 0, cfg.LOGICAL_W, 70);
+    ctx.fillRect(0, 0, cfg.LOGICAL_W, 112);
 
     // Building
     ctx.fillStyle = cfg.PAL['B']; // BLUE walls
-    ctx.fillRect(20, 30, 200, 82);
+    ctx.fillRect(20, 24, 200, 88);
+    ctx.fillStyle = cfg.PAL['A']; // CYAN roof trim
+    ctx.fillRect(18, 22, 204, 4);
 
-    // Windows
-    ctx.fillStyle = cfg.PAL['7']; // YELLOW (lit)
+    // Windows with glass glint
     for (let i = 0; i < 4; i++) {
-      ctx.fillRect(35 + i * 48, 40, 20, 16);
+      const wx = 34 + i * 48;
+      ctx.fillStyle = cfg.PAL['0'];
+      ctx.fillRect(wx - 1, 35, 22, 18);
+      ctx.fillStyle = cfg.PAL['7']; // YELLOW warm interior
+      ctx.fillRect(wx, 36, 20, 16);
+      ctx.fillStyle = cfg.PAL['4']; // glint
+      ctx.fillRect(wx + 2, 38, 4, 4);
     }
 
     // Store sign
+    ctx.fillStyle = cfg.PAL['0'];
+    ctx.fillRect(46, 60, 148, 22);
     ctx.fillStyle = cfg.PAL['4']; // WHITE
-    ctx.fillRect(50, 70, 140, 20);
+    ctx.fillRect(48, 62, 144, 18);
     ctx.font = '8px "Press Start 2P", monospace';
     ctx.fillStyle = cfg.PAL['B'];
     ctx.textBaseline = 'top';
     ctx.textAlign = 'center';
-    ctx.fillText(cfg.STORE_NAME, 120, 76);
+    ctx.fillText(cfg.STORE_NAME, 120, 67);
     ctx.textAlign = 'left';
 
-    // Door
-    ctx.fillStyle = cfg.PAL['E']; // WOOD
-    ctx.fillRect(100, 90, 40, 22);
+    // Double Door
+    ctx.fillStyle = cfg.PAL['0'];
+    ctx.fillRect(98, 86, 44, 26);
+    ctx.fillStyle = cfg.PAL['E']; // WOOD frame
+    ctx.fillRect(100, 88, 19, 24);
+    ctx.fillRect(121, 88, 19, 24);
+    ctx.fillStyle = cfg.PAL['A']; // glass panes
+    ctx.fillRect(103, 91, 13, 12);
+    ctx.fillRect(124, 91, 13, 12);
     ctx.fillStyle = cfg.PAL['7'];
-    ctx.fillRect(122, 100, 4, 4); // handle
+    ctx.fillRect(116, 102, 2, 4);
+    ctx.fillRect(122, 102, 2, 4);
 
     // Sidewalk
     ctx.fillStyle = cfg.PAL['3']; // MIST

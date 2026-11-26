@@ -8,6 +8,7 @@ import { Entity, entityManager } from '../world/entity.js';
 import { camera } from '../world/camera.js';
 import { dialogueUI } from '../world/dialogue.js';
 import { scriptRunner } from '../world/scriptRunner.js';
+import { uiArt } from '../art/ui.js';
 import { dialogue as D } from '../data/dialogue.js';
 import { laptops } from '../data/laptops.js';
 
@@ -26,8 +27,12 @@ export const StoreScene = {
   get tilemap() { return tilemap; },
 
   enter(params = {}) {
+    if (window.CQ) {
+      window.CQ.storeScene = StoreScene;
+    }
+
     // If returning from BATTLE1
-    if (state.flags.b1Winner && storePhase === 'explore') {
+    if (state.flags.b1Winner && !state.flags.persona) {
       storePhase = 'post_battle1';
       runPostBattle1();
       return;
@@ -50,12 +55,8 @@ export const StoreScene = {
     guide = entityManager.add(new Entity('guide', 9, 5, 'down', 'spr_guide'));
     rival = entityManager.add(new Entity('rival', 11, 6, 'left', 'spr_rival'));
 
-    // Mini laptops on tables are drawn in draw()
-
     if (window.CQ) {
       window.CQ.audio.playMusic('MUS_STORE', { fadeMs: 300 });
-      // Store ref for scriptRunner
-      window.CQ.storeScene = StoreScene;
     }
   },
 
@@ -75,14 +76,14 @@ export const StoreScene = {
       if (input.aJustPressed()) {
         scriptRunner.handleA();
       }
-      const dir = input.dir();
+      const dir = input.dirJustPressed();
       if (dir) scriptRunner.handleDirection(dir);
       return;
     }
 
     if (dialogueUI.isActive) {
       if (input.aJustPressed()) dialogueUI.handleA();
-      const dir = input.dir();
+      const dir = input.dirJustPressed();
       if (dir === 'up') dialogueUI.handleUp();
       if (dir === 'down') dialogueUI.handleDown();
       return;
@@ -126,14 +127,12 @@ export const StoreScene = {
     // Draw tilemap
     tilemap.draw(ctx, camera.x, camera.y);
 
-    // Draw mini laptops on tables if not picked
-    if (!state.flags.starter || state.flags.starter !== 'nova') {
+    // Draw mini laptops on tables if not picked by player or rival (section 6)
+    if (state.laptops.player !== 'nova' && state.laptops.rival !== 'nova') {
       drawMiniSprite(ctx, 'spr_mini_nova', 9, 6);
     }
-    if (!state.flags.starter || state.flags.starter !== 'aura_go') {
-      if (!state.laptops.rival || state.laptops.rival !== 'aura_go') {
-        drawMiniSprite(ctx, 'spr_mini_aura', 10, 6);
-      }
+    if (state.laptops.player !== 'aura_go' && state.laptops.rival !== 'aura_go') {
+      drawMiniSprite(ctx, 'spr_mini_aura', 10, 6);
     }
 
     // Draw entities
@@ -149,24 +148,20 @@ export const StoreScene = {
 
     // Toast
     if (toastTimer > 0) {
-      const alpha = Math.min(1, toastTimer / 500);
-      ctx.globalAlpha = alpha;
       const tw = toastText.length * 8 + 16;
       const tx = Math.floor((240 - tw) / 2);
       ctx.fillStyle = cfg.PAL['0'];
       ctx.fillRect(tx, 68, tw, 24);
-      ctx.strokeStyle = cfg.PAL['7'];
-      ctx.lineWidth = 1;
-      ctx.strokeRect(tx, 68, tw, 24);
+      uiArt.drawRectOutline(ctx, tx, 68, tw, 24, cfg.PAL['7'], 1);
       ctx.font = '8px "Press Start 2P", monospace';
       ctx.fillStyle = cfg.PAL['7'];
       ctx.textBaseline = 'top';
       ctx.fillText(toastText, tx + 8, 76);
-      ctx.globalAlpha = 1;
     }
   },
 
   exit() {
+    scriptRunner.stop();
     dialogueUI.close();
   }
 };
@@ -238,6 +233,20 @@ function handleInteraction() {
 }
 
 function handleCardInput() {
+  const click = input.consumeClick();
+  if (click) {
+    // Panel 40..200, 32..128: right half / outside bottom-left = BACK if tapped on [B] LOOK AGAIN, left = TAKE IT
+    if (click.x >= 120 && click.y >= 106) {
+      laptopCardShowing = false;
+      laptopCardId = null;
+      if (window.CQ) window.CQ.audio.playSfx('sfx_cancel');
+      return;
+    }
+    if (click.x >= 40 && click.x <= 200 && click.y >= 32 && click.y <= 128) {
+      pickLaptop(laptopCardId);
+      return;
+    }
+  }
   if (input.aJustPressed()) {
     // Choose this laptop
     pickLaptop(laptopCardId);
@@ -254,72 +263,66 @@ function drawLaptopCard(ctx, id) {
   const laptop = laptops[id];
   if (!laptop) return;
 
-  // Panel 160x96 centered
-  const px = 40, py = 20, pw = 160, ph = 96;
+  // Panel 160x96 centred at (40, 32) per section 7.3
+  const px = 40, py = 32, pw = 160, ph = 96;
   ctx.fillStyle = cfg.PAL['4'];
   ctx.fillRect(px, py, pw, ph);
-  ctx.strokeStyle = cfg.PAL['B'];
-  ctx.lineWidth = 2;
-  ctx.strokeRect(px, py, pw, ph);
-  
+  uiArt.drawRectOutline(ctx, px, py, pw, ph, cfg.PAL['B'], 2);
+
   // Header
   ctx.fillStyle = cfg.PAL['B'];
   ctx.fillRect(px + 2, py + 2, pw - 4, 14);
   ctx.font = '8px "Press Start 2P", monospace';
   ctx.fillStyle = cfg.PAL['4'];
   ctx.textBaseline = 'top';
-  ctx.fillText(laptop.name, px + 8, py + 5);
+  ctx.fillText(laptop.name, px + 6, py + 5);
 
-  // Stats
-  ctx.fillStyle = cfg.PAL['0'];
-  const rows = [
-    `Look: ${'★'.repeat(laptop.look)}`,
-    `Price: ${laptop.priceTag}`,
-    `Battery: ${laptop.battery}`,
-    `AI speed: ${laptop.aiSpeed}`,
-  ];
-  for (let i = 0; i < rows.length; i++) {
-    ctx.font = '7px monospace';
-    ctx.fillText(rows[i], px + 8, py + 22 + i * 12);
+  // Laptop sprite inside card right side (section 7.3)
+  if (window.CQ && window.CQ.art) {
+    window.CQ.art.draw(ctx, `spr_laptop_${id}`, px + 108, py + 20);
   }
+
+  // Stats on left side using crisp 4x6 pixel font
+  uiArt.drawMiniText(ctx, `Look: ${'*'.repeat(laptop.look)}`, px + 6, py + 22, cfg.PAL['0']);
+
+  if (id === 'nova') {
+    uiArt.drawMiniText(ctx, 'Price:', px + 6, py + 33, cfg.PAL['0']);
+    ctx.fillStyle = cfg.PAL['5']; // RED tag
+    ctx.fillRect(px + 37, py + 31, 49, 9);
+    uiArt.drawMiniText(ctx, 'SALE -20%', px + 39, py + 33, cfg.PAL['4']);
+  } else {
+    uiArt.drawMiniText(ctx, `Price: ${laptop.priceTag}`, px + 6, py + 33, cfg.PAL['0']);
+  }
+
+  uiArt.drawMiniText(ctx, `Battery: ${laptop.battery}`, px + 6, py + 44, cfg.PAL['0']);
+  uiArt.drawMiniText(ctx, `AI speed: ${laptop.aiSpeed}`, px + 6, py + 55, cfg.PAL['0']);
 
   // Chip line
   if (laptop.chipLine) {
-    ctx.font = '6px monospace';
-    ctx.fillStyle = cfg.PAL['B'];
-    ctx.fillText(laptop.chipLine, px + 8, py + 72);
+    uiArt.drawMiniText(ctx, laptop.chipLine, px + 6, py + 68, cfg.PAL['B']);
   }
 
-  // Price tag highlight for NOVA
-  if (id === 'nova') {
-    ctx.fillStyle = cfg.PAL['5']; // RED
-    ctx.fillRect(px + 100, py + 32, 48, 10);
-    ctx.fillStyle = cfg.PAL['4'];
-    ctx.font = '6px monospace';
-    ctx.fillText('SALE -20%', px + 102, py + 34);
-  }
-
-  // Footer
-  ctx.font = '7px monospace';
-  ctx.fillStyle = cfg.PAL['B'];
-  ctx.fillText('[A] TAKE IT  [B] BACK', px + 8, py + 84);
+  // Choice line
+  uiArt.drawMiniText(ctx, '[A] TAKE IT   [B] LOOK AGAIN', px + 6, py + 84, cfg.PAL['B']);
 }
 
 function pickLaptop(id) {
   laptopCardShowing = false;
   laptopCardId = null;
 
+  if (window.CQ) window.CQ.audio.playSfx('sfx_confirm');
+
   if (id === 'nova') {
-    // Main path
+    // Main path: picked laptop disappears at once; rival takes the other on R3
     state.flags.starter = 'nova';
     state.laptops.player = 'nova';
-    state.laptops.rival = 'aura_go';
+    state.laptops.rival = null;
     runPickScript('nova');
   } else {
     // Fork path
     state.flags.starter = 'aura_go';
     state.laptops.player = 'aura_go';
-    state.laptops.rival = 'nova';
+    state.laptops.rival = null;
     runPickScript('aura_go');
   }
 }
@@ -328,6 +331,7 @@ function runIntroCutscene() {
   // CS_INTRO: lock, face player, G1, G2, G3, MUSIC sting MUS_RIVAL, R1, R2, MUSIC resume MUS_STORE, G4, unlock, set guideMet
   scriptRunner.run([
     ['LOCK'],
+    ['FACE', 'guide', 'down'],
     ['SAY', 'G1'],
     ['SAY', 'G2'],
     ['SAY', 'G3'],
@@ -347,6 +351,7 @@ function runPickScript(id) {
     scriptRunner.run([
       ['LOCK'],
       ['SAY', 'G5'],
+      ['SET', 'laptops.rival', 'aura_go'],
       ['SAY', 'R3'],
       ['SAY', 'G6'],
       ['SAY', 'G7'],
@@ -357,6 +362,7 @@ function runPickScript(id) {
     scriptRunner.run([
       ['LOCK'],
       ['SAY', 'G5b'],
+      ['SET', 'laptops.rival', 'nova'],
       ['SAY', 'R3b'],
       ['SAY', 'G6'],
       ['SAY', 'G7'],
@@ -366,7 +372,7 @@ function runPickScript(id) {
 }
 
 async function runPostBattle1() {
-  // Determine which path
+  // Determine which path (section 7.4 ends at G12; PERSONA starts with G13)
   const isMainPath = state.flags.starter === 'nova';
 
   if (window.CQ) {
@@ -384,10 +390,8 @@ async function runPostBattle1() {
       ['SAY', 'G10'],
       ['SAY', 'G11'],
       ['SAY', 'G12'],
-      ['SAY', 'G13'],
       ['UNLOCK'],
     ], () => {
-      // Transition to persona selection
       if (window.CQ) {
         window.CQ.fx.wipeOut(cfg.WIPE_MS).then(() => {
           window.CQ.sceneManager.switchTo('PERSONA');
@@ -406,7 +410,6 @@ async function runPostBattle1() {
       ['SAY', 'G10'],
       ['SAY', 'G11'],
       ['SAY', 'G12'],
-      ['SAY', 'G13'],
       ['UNLOCK'],
     ], () => {
       if (window.CQ) {

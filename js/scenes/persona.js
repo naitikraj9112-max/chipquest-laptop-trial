@@ -4,10 +4,12 @@ import { input } from '../core/input.js';
 import { state } from '../core/state.js';
 import { dialogueUI } from '../world/dialogue.js';
 import { scriptRunner } from '../world/scriptRunner.js';
+import { uiArt } from '../art/ui.js';
 import { dialogue as D } from '../data/dialogue.js';
 
 let selectedIndex = 0;
-let phase = 'prompt'; // prompt, choose, chosen
+let phase = 'prompt'; // prompt, choose, chosen, transitioning
+let chooseTimer = 0;
 const personas = [
   { id: 'student', label: 'STUDENT', icon: 'icon_student' },
   { id: 'creator', label: 'CREATOR', icon: 'icon_creator' },
@@ -18,10 +20,16 @@ export const PersonaScene = {
   enter() {
     selectedIndex = 0;
     phase = 'prompt';
+    chooseTimer = 0;
+
+    if (window.CQ) {
+      window.CQ.audio.playMusic('MUS_STORE', { fadeMs: 300 });
+    }
 
     // Show G13 then choice
     dialogueUI.show([D.G13], () => {
       phase = 'choose';
+      chooseTimer = 0;
     });
   },
 
@@ -34,19 +42,39 @@ export const PersonaScene = {
     }
 
     if (phase === 'choose') {
-      const dir = input.dir();
-      if (dir === 'left') {
-        selectedIndex = Math.max(0, selectedIndex - 1);
+      chooseTimer += dt;
+      const click = input.consumeClick();
+      if (click) {
+        if (chooseTimer < 200) {
+          input.aJustPressed();
+          return;
+        }
+        const xs = [12, 88, 164];
+        for (let i = 0; i < 3; i++) {
+          if (click.x >= xs[i] && click.x <= xs[i] + 64 && click.y >= 40 && click.y <= 96) {
+            selectedIndex = i;
+            selectPersona(personas[i].id);
+            return;
+          }
+        }
+        input.aJustPressed(); // ignore click outside persona buttons
+        return;
+      }
+
+      const dir = input.dirJustPressed();
+      if (dir === 'left' && selectedIndex > 0) {
+        selectedIndex--;
         if (window.CQ) window.CQ.audio.playSfx('sfx_blip');
       }
-      if (dir === 'right') {
-        selectedIndex = Math.min(2, selectedIndex + 1);
+      if (dir === 'right' && selectedIndex < 2) {
+        selectedIndex++;
         if (window.CQ) window.CQ.audio.playSfx('sfx_blip');
       }
 
-      if (input.aJustPressed()) {
+      if (input.aJustPressed() && chooseTimer >= 200) {
         selectPersona(personas[selectedIndex].id);
       }
+      return;
     }
 
     if (phase === 'chosen') {
@@ -69,9 +97,7 @@ export const PersonaScene = {
         // Button background
         ctx.fillStyle = isSelected ? cfg.PAL['B'] : cfg.PAL['1'];
         ctx.fillRect(bx, by, 64, 56);
-        ctx.strokeStyle = isSelected ? cfg.PAL['A'] : cfg.PAL['2'];
-        ctx.lineWidth = 2;
-        ctx.strokeRect(bx, by, 64, 56);
+        uiArt.drawRectOutline(ctx, bx, by, 64, 56, isSelected ? cfg.PAL['A'] : cfg.PAL['2'], 2);
 
         // Icon (draw scaled x2 — 32x32 centered)
         const iconId = personas[i].icon;
@@ -80,7 +106,7 @@ export const PersonaScene = {
           const iconData = window.CQ.art.getSpriteData(iconId);
           if (iconData) {
             ctx.imageSmoothingEnabled = false;
-            ctx.drawImage(iconData.canvas, bx + 16, by + 4, 32, 32);
+            ctx.drawImage(iconData.canvas, bx + 16, by + 5, 32, 32);
           }
         } else {
           // Fallback: colored square
@@ -89,8 +115,8 @@ export const PersonaScene = {
           ctx.fillRect(bx + 20, by + 8, 24, 24);
         }
 
-        // Label
-        ctx.font = '7px "Press Start 2P", monospace';
+        // Crisp 8px Press Start 2P label
+        ctx.font = '8px "Press Start 2P", monospace';
         ctx.fillStyle = cfg.PAL['4'];
         ctx.textBaseline = 'top';
         ctx.textAlign = 'center';
@@ -144,6 +170,7 @@ function selectPersona(personaId) {
   pages.push(D[b2Key]);
 
   dialogueUI.show(pages, () => {
+    phase = 'transitioning';
     // Transition to BATTLE2
     if (window.CQ) {
       window.CQ.fx.wipeOut(cfg.WIPE_MS).then(() => {

@@ -3,7 +3,7 @@ import { cfg } from '../config.js';
 
 const MAP_DATA = [
   '####################',
-  '#WW.WW.WW.WW.WW.WW#',
+  '#WW.WW.WW.WW.WW.WW.#',
   '#...SSSS....SSSS...#',
   '#..................#',
   '#..SSSS......SSSS..#',
@@ -86,11 +86,17 @@ export const tilemap = {
         const tileId = tilemap.getTile(c, r);
         const sx = c * cfg.TILE - camX;
         const sy = r * cfg.TILE - camY;
-        
+        const needsFloorBg = tileId === 'tile_table' || tileId === 'tile_plant';
+
         if (window.CQ && window.CQ.art) {
+          if (needsFloorBg) window.CQ.art.drawTile(ctx, 'tile_floor', sx, sy);
           window.CQ.art.drawTile(ctx, tileId, sx, sy);
         } else {
           // Fallback: draw colored rects
+          if (needsFloorBg) {
+            ctx.fillStyle = cfg.PAL['F'];
+            ctx.fillRect(sx, sy, cfg.TILE, cfg.TILE);
+          }
           const colors = {
             'tile_floor': cfg.PAL['F'],
             'tile_carpet': cfg.PAL['6'],

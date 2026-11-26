@@ -3,6 +3,7 @@ import { cfg } from '../config.js';
 import { sceneManager } from './sceneManager.js';
 import { input } from './input.js';
 import { state, resetState } from './state.js';
+import { uiArt } from '../art/ui.js';
 
 let canvas, ctx;
 let lastTime = 0;
@@ -10,7 +11,7 @@ let running = false;
 let scale = 1;
 let offsetX = 0, offsetY = 0;
 let debugMode = false;
-let idleTimer = 0;
+let idleResetting = false;
 
 export const loop = {
   get canvas() { return canvas; },
@@ -81,10 +82,17 @@ function tick(now) {
 
   // Idle reset (section 12)
   if (Date.now() - input.lastInput > cfg.IDLE_RESET_S * 1000) {
-    if (sceneManager.currentId !== 'TITLE') {
-      resetState();
-      sceneManager.switchTo('TITLE');
+    if (!idleResetting && sceneManager.currentId && sceneManager.currentId !== 'TITLE') {
+      idleResetting = true;
+      window.CQ?.fx?.wipeOut(cfg.WIPE_MS).then(() => {
+        resetState();
+        sceneManager.switchTo('TITLE');
+        window.CQ?.fx?.wipeIn(cfg.WIPE_MS);
+        idleResetting = false;
+      });
     }
+  } else {
+    idleResetting = false;
   }
 
   // Update — scenes poll input during their update
@@ -112,11 +120,11 @@ function tick(now) {
 
   if (window.CQ && window.CQ.fx) window.CQ.fx.draw(ctx);
 
-  // Debug
+  // Debug (section 3.9: FPS, tile coords)
   if (debugMode) {
-    ctx.fillStyle = cfg.PAL['8'];
-    ctx.font = '8px monospace';
-    ctx.fillText(`FPS:${Math.round(1000/dt)}`, 2, 8);
+    const fps = dt > 0 ? Math.round(1000 / dt) : 60;
+    const coords = sceneManager.currentId === 'STORE' ? ` (${state.player.x},${state.player.y})` : '';
+    uiArt.drawMiniText(ctx, `FPS:${fps}${coords}`, 2, 2, cfg.PAL['8']);
   }
 
   requestAnimationFrame(tick);

@@ -65,35 +65,27 @@
     document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
   </script>
 
-  <!-- Catch module load errors -->
+  <!-- Catch module/runtime load errors without hiding actual errors -->
   <script>
     window.addEventListener('error', e => {
       console.error('GLOBAL ERROR:', e.message, e.filename, e.lineno);
-      document.getElementById('loading').textContent = 'ERROR: ' + e.message;
+      const ld = document.getElementById('loading');
+      if (ld) {
+        ld.style.display = 'flex';
+        ld.textContent = 'ERROR: ' + e.message;
+      }
     });
     window.addEventListener('unhandledrejection', e => {
       console.error('UNHANDLED REJECTION:', e.reason);
-      document.getElementById('loading').textContent = 'ERROR: ' + e.reason;
-    });
-    // Safety fallback: hide loading after 5s no matter what
-    setTimeout(() => {
       const ld = document.getElementById('loading');
-      if (ld && ld.style.display !== 'none') {
-        console.warn('Loading screen still visible after 5s, hiding it');
-        ld.style.display = 'none';
+      if (ld) {
+        ld.style.display = 'flex';
+        ld.textContent = 'ERROR: ' + (e.reason && e.reason.message ? e.reason.message : e.reason);
       }
-    }, 5000);
+    });
   </script>
 
   <!-- Main entry -->
-  <script type="module">
-    import './js/core/main.js';
-    console.log('[HTML] Module imported');
-    // Hide loading screen once first frame renders
-    requestAnimationFrame(() => {
-      const loading = document.getElementById('loading');
-      if (loading) loading.style.display = 'none';
-    });
-  </script>
+  <script type="module" src="./js/core/main.js"></script>
 </body>
 </html>

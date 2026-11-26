@@ -37,11 +37,12 @@ export class BattleUI {
   advanceMessage() {
     if (this.messageQueue.length === 0) {
       this.currentMessage = null;
-      this.showingMenu = true;
       if (this.onMessagesDone) {
         const cb = this.onMessagesDone;
         this.onMessagesDone = null;
         cb();
+      } else {
+        this.showingMenu = true;
       }
       return;
     }
@@ -156,54 +157,45 @@ export class BattleUI {
 
   drawBackground(ctx) {
     if (this.bgStyle === 'battle1') {
-      // Diagonal stripes DUSK/INK with ORANGE edge
+      // Diagonal stripes DUSK/INK with ORANGE edge (pure palette colors, crisp rects)
       ctx.fillStyle = cfg.PAL['0']; // INK
       ctx.fillRect(0, 0, cfg.LOGICAL_W, cfg.LOGICAL_H);
-      ctx.strokeStyle = cfg.PAL['1']; // DUSK
-      ctx.lineWidth = 2;
-      for (let i = -cfg.LOGICAL_H; i < cfg.LOGICAL_W + cfg.LOGICAL_H; i += 8) {
-        ctx.beginPath();
-        ctx.moveTo(i, 0);
-        ctx.lineTo(i - cfg.LOGICAL_H, cfg.LOGICAL_H);
-        ctx.stroke();
+      ctx.fillStyle = cfg.PAL['1']; // DUSK
+      for (let y = 0; y < 112; y += 2) {
+        for (let x = -112; x < cfg.LOGICAL_W; x += 12) {
+          ctx.fillRect(x + (112 - y) / 2, y, 4, 2);
+        }
       }
       // Orange edge
       ctx.strokeStyle = cfg.PAL['6'];
-      ctx.lineWidth = 3;
-      ctx.strokeRect(2, 2, cfg.LOGICAL_W - 4, 108);
+      ctx.lineWidth = 2;
+      ctx.strokeRect(1, 1, cfg.LOGICAL_W - 2, 110);
     } else {
-      // INK with CYAN circuit grid
+      // INK with BLUE/CYAN circuit grid (pure palette colors)
       ctx.fillStyle = cfg.PAL['0'];
       ctx.fillRect(0, 0, cfg.LOGICAL_W, cfg.LOGICAL_H);
-      ctx.strokeStyle = cfg.PAL['A'];
-      ctx.lineWidth = 1;
-      ctx.globalAlpha = 0.15;
+      ctx.fillStyle = cfg.PAL['1'];
       for (let x = 0; x < cfg.LOGICAL_W; x += 20) {
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 112); ctx.stroke();
+        ctx.fillRect(x, 0, 1, 112);
       }
       for (let y = 0; y < 112; y += 20) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cfg.LOGICAL_W, y); ctx.stroke();
+        ctx.fillRect(0, y, cfg.LOGICAL_W, 1);
       }
-      // Small circuit nodes
+      // Circuit nodes in BLUE/CYAN
       for (let x = 0; x < cfg.LOGICAL_W; x += 20) {
         for (let y = 0; y < 112; y += 20) {
-          ctx.fillStyle = cfg.PAL['A'];
+          ctx.fillStyle = cfg.PAL['B'];
           ctx.fillRect(x - 1, y - 1, 3, 3);
         }
       }
-      ctx.globalAlpha = 1;
     }
   }
 
   drawPanel(ctx, px, py, name, display, actual) {
-    // Panel background
+    // Solid palette panel background (INK fill, crisp WHITE border)
     ctx.fillStyle = cfg.PAL['0'];
-    ctx.globalAlpha = 0.7;
     ctx.fillRect(px, py, 120, 46);
-    ctx.globalAlpha = 1;
-    ctx.strokeStyle = cfg.PAL['4'];
-    ctx.lineWidth = 1;
-    ctx.strokeRect(px, py, 120, 46);
+    uiArt.drawRectOutline(ctx, px, py, 120, 46, cfg.PAL['4'], 1);
 
     // Name
     ctx.font = '8px "Press Start 2P", monospace';
@@ -211,56 +203,48 @@ export class BattleUI {
     ctx.textBaseline = 'top';
     ctx.fillText(name, px + 4, py + 3);
 
-    // Engine icon (small text)
-    if (actual.lastEngine) {
-      ctx.fillStyle = cfg.PAL['A'];
-      ctx.font = '6px monospace';
-      ctx.fillText(actual.lastEngine, px + 90, py + 4);
+    // Engine icon 8x8 beside actor's name (section 8.7)
+    if (actual.lastEngine && window.CQ && window.CQ.art) {
+      const engineIcon = `icon_${actual.lastEngine.toLowerCase()}`;
+      window.CQ.art.draw(ctx, engineIcon, px + 109, py + 3);
     }
 
-    // TASK bar
+    // TASK bar (LIME)
     this.drawBar(ctx, 'TASK', px + 4, py + 14, display.task, 100, cfg.PAL['8']);
-    // BATT bar
-    const battColor = display.batt >= 50 ? cfg.PAL['8'] : display.batt >= 20 ? cfg.PAL['7'] : cfg.PAL['5'];
+
+    // BATT bar (LIME >= 50, YELLOW 21-49, flashes RED <= 20)
+    const lowBattFlash = actual.batt <= 20 && Math.floor(Date.now() / 250) % 2 === 1;
+    const battColor = actual.batt <= 20
+      ? (lowBattFlash ? cfg.PAL['1'] : cfg.PAL['5'])
+      : display.batt >= 50 ? cfg.PAL['8'] : cfg.PAL['7'];
     this.drawBar(ctx, 'BATT', px + 4, py + 25, display.batt, 100, battColor);
-    // HEAT bar
+
+    // HEAT bar (CYAN < 60, RED + icon_warn >= 60)
     const heatColor = display.heat < 60 ? cfg.PAL['A'] : cfg.PAL['5'];
     this.drawBar(ctx, 'HEAT', px + 4, py + 36, display.heat, 100, heatColor);
 
-    // Warning icon for high heat
-    if (actual.heat >= 60) {
-      ctx.fillStyle = cfg.PAL['5'];
-      ctx.font = '6px monospace';
-      ctx.fillText('!', px + 110, py + 37);
+    // Warning icon 8x8 for high heat (section 8.7)
+    if (actual.heat >= 60 && window.CQ && window.CQ.art) {
+      window.CQ.art.draw(ctx, 'icon_warn', px + 111, py + 35);
     }
   }
 
   drawBar(ctx, label, x, y, value, max, color) {
-    // Label
-    ctx.font = '6px monospace';
-    ctx.fillStyle = cfg.PAL['3'];
-    ctx.textBaseline = 'top';
-    ctx.fillText(label, x, y);
+    // Crisp 4x6 pixel label (fits inside x..x+27)
+    uiArt.drawMiniText(ctx, label, x, y + 1, cfg.PAL['3']);
 
-    // Bar background
+    // Bar 80x6 at panel x+32 (x is already panel x+4)
     const bx = x + 28;
     ctx.fillStyle = cfg.PAL['1'];
     ctx.fillRect(bx, y, 80, 6);
 
-    // Bar fill
-    const fillW = Math.max(0, Math.floor((value / max) * 80));
+    // Bar fill (inside 1px border)
+    const fillW = Math.max(0, Math.floor((value / max) * 78));
     ctx.fillStyle = color;
-    ctx.fillRect(bx, y, fillW, 6);
+    ctx.fillRect(bx + 1, y + 1, fillW, 4);
 
-    // Border
-    ctx.strokeStyle = cfg.PAL['2'];
-    ctx.lineWidth = 1;
-    ctx.strokeRect(bx, y, 80, 6);
-
-    // Value text
-    ctx.fillStyle = cfg.PAL['4'];
-    ctx.font = '6px monospace';
-    ctx.fillText(Math.floor(value), bx + 82, y);
+    // Crisp 1px border
+    uiArt.drawRectOutline(ctx, bx, y, 80, 6, cfg.PAL['2'], 1);
   }
 
   drawLaptopSprite(ctx, laptopId, x, y, shake) {
@@ -286,9 +270,8 @@ export class BattleUI {
     // Bottom box (0,112,240x48)
     ctx.fillStyle = cfg.PAL['4'];
     ctx.fillRect(0, 112, 240, 48);
-    ctx.strokeStyle = cfg.PAL['0'];
-    ctx.lineWidth = 2;
-    ctx.strokeRect(1, 113, 238, 46);
+    uiArt.drawRectOutline(ctx, 0, 112, 240, 48, cfg.PAL['0'], 2);
+    uiArt.drawRectOutline(ctx, 2, 114, 236, 44, cfg.PAL['1'], 1);
 
     if (this.currentMessage) {
       // Show message
@@ -311,15 +294,14 @@ export class BattleUI {
         const mx = 16 + col * 108;
         const my = 122 + row * 16;
 
-        // Cursor
+        // Cursor (icon_cursor 8x8 beside selected label per section 8.7)
         if (i === this.selectedMove) {
-          ctx.fillStyle = cfg.PAL['5']; // RED cursor
-          ctx.beginPath();
-          ctx.moveTo(mx - 10, my + 1);
-          ctx.lineTo(mx - 4, my + 4);
-          ctx.lineTo(mx - 10, my + 7);
-          ctx.closePath();
-          ctx.fill();
+          if (window.CQ && window.CQ.art) {
+            window.CQ.art.draw(ctx, 'icon_cursor', mx - 10, my);
+          } else {
+            ctx.fillStyle = cfg.PAL['5'];
+            ctx.fillRect(mx - 8, my + 2, 4, 4);
+          }
         }
 
         ctx.fillStyle = cfg.PAL['0'];
@@ -332,16 +314,18 @@ export class BattleUI {
 
   drawWifiDropBanner(ctx) {
     ctx.fillStyle = cfg.PAL['0'];
-    ctx.globalAlpha = 0.85;
-    ctx.fillRect(30, 45, 180, 30);
-    ctx.globalAlpha = 1;
+    ctx.fillRect(24, 44, 192, 30);
     ctx.strokeStyle = cfg.PAL['5'];
     ctx.lineWidth = 2;
-    ctx.strokeRect(30, 45, 180, 30);
+    ctx.strokeRect(24, 44, 192, 30);
+
+    if (window.CQ && window.CQ.art) {
+      window.CQ.art.draw(ctx, 'icon_wifi_off', 36, 55);
+    }
 
     ctx.font = '8px "Press Start 2P", monospace';
     ctx.fillStyle = cfg.PAL['5'];
     ctx.textBaseline = 'top';
-    ctx.fillText('WI-FI DROPPED!', 50, 55);
+    ctx.fillText('WI-FI DROPPED!', 52, 55);
   }
 }

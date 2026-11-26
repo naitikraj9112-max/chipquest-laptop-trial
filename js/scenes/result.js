@@ -1,8 +1,8 @@
 // js/scenes/result.js — Trainer Card / Result screen (section 9.3)
 import { cfg } from '../config.js';
 import { input } from '../core/input.js';
-import { state } from '../core/state.js';
-import { resetState } from '../core/state.js';
+import { state, resetState } from '../core/state.js';
+import { uiArt } from '../art/ui.js';
 
 const recommendations = {
   student: {
@@ -32,10 +32,16 @@ const recommendations = {
 };
 
 let timer = 0;
+let restarting = false;
+const qrImg = new Image();
+let qrLoaded = false;
+qrImg.onload = () => { qrLoaded = true; };
+qrImg.src = 'assets/qr.png';
 
 export const ResultScene = {
   enter() {
     timer = 0;
+    restarting = false;
     if (window.CQ) {
       window.CQ.audio.playMusic('MUS_RESULT', { fadeMs: 300 });
     }
@@ -45,7 +51,8 @@ export const ResultScene = {
     timer += dt;
 
     // Tap to restart
-    if (input.aJustPressed() && timer > 1000) {
+    if (!restarting && input.aJustPressed() && timer > 800) {
+      restarting = true;
       if (window.CQ) {
         window.CQ.audio.playSfx('sfx_confirm');
         window.CQ.fx.wipeOut(cfg.WIPE_MS).then(() => {
@@ -58,131 +65,91 @@ export const ResultScene = {
   },
 
   draw(ctx) {
-    // Background: WHITE and BLUE with YELLOW highlights
-    ctx.fillStyle = cfg.PAL['4'];
+    // Background INK letterbox, panel WHITE/BLUE/YELLOW (section 9.3, 10)
+    ctx.fillStyle = cfg.PAL['0'];
     ctx.fillRect(0, 0, cfg.LOGICAL_W, cfg.LOGICAL_H);
 
     // Panel 224x144 at (8,8)
-    const px = 8, py = 4, pw = 224, ph = 152;
+    const px = 8, py = 8, pw = 224, ph = 144;
     ctx.fillStyle = cfg.PAL['4'];
     ctx.fillRect(px, py, pw, ph);
-    ctx.strokeStyle = cfg.PAL['B'];
-    ctx.lineWidth = 2;
-    ctx.strokeRect(px, py, pw, ph);
+    uiArt.drawRectOutline(ctx, px, py, pw, ph, cfg.PAL['B'], 2);
 
     // Header
     ctx.fillStyle = cfg.PAL['B'];
-    ctx.fillRect(px + 2, py + 2, pw - 4, 16);
+    ctx.fillRect(px + 2, py + 2, pw - 4, 14);
     ctx.font = '8px "Press Start 2P", monospace';
     ctx.fillStyle = cfg.PAL['7']; // YELLOW
     ctx.textBaseline = 'top';
     ctx.textAlign = 'center';
-    ctx.fillText('TRAINER CARD', px + pw / 2, py + 6);
+    ctx.fillText('TRAINER CARD', px + pw / 2, py + 5);
     ctx.textAlign = 'left';
 
     const persona = state.flags.persona || 'student';
     const rec = recommendations[persona];
+    const lx = px + 6; // x=14
 
-    // Left column
-    const lx = px + 8;
-    let ly = py + 24;
-
-    // Persona icon
+    // Persona icon (16x16 at (14, 26))
     const iconId = `icon_${persona}`;
     if (window.CQ && window.CQ.art) {
       const iconData = window.CQ.art.getSpriteData(iconId);
       if (iconData) {
-        ctx.drawImage(iconData.canvas, lx, ly, 24, 24);
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(iconData.canvas, lx, py + 18, 16, 16);
       }
     }
 
-    ly += 28;
-    ctx.font = '7px "Press Start 2P", monospace';
-    ctx.fillStyle = cfg.PAL['0'];
-    ctx.fillText(`CLASS: ${persona.toUpperCase()}`, lx, ly);
-    ly += 12;
-    ctx.fillText('PARTNER: AURA PRO', lx, ly);
-    ly += 12;
+    // Class & partner stats (crisp 4x6 pixel font)
+    uiArt.drawMiniText(ctx, `CLASS: ${persona.toUpperCase()}`, lx + 20, py + 19, cfg.PAL['0']);
+    uiArt.drawMiniText(ctx, 'PARTNER: AURA PRO', lx + 20, py + 28, cfg.PAL['0']);
 
     const batt = state.flags.b2PlayerBatt ?? 38;
-    ctx.fillText(`BATTERY LEFT: ${batt}%`, lx, ly);
-    ly += 12;
-
     const turns = state.flags.b2Turns ?? 5;
-    ctx.fillText(`TURNS: ${turns}`, lx, ly);
+    uiArt.drawMiniText(ctx, `BATTERY LEFT: ${batt}%`, lx, py + 38, cfg.PAL['0']);
+    uiArt.drawMiniText(ctx, `TURNS: ${turns}`, lx, py + 47, cfg.PAL['0']);
 
-    // QR area (right side)
-    const qx = px + 148, qy = py + 28;
-    // QR placeholder
-    ctx.fillStyle = cfg.PAL['0'];
-    ctx.fillRect(qx, qy, 56, 56);
-    ctx.fillStyle = cfg.PAL['4'];
-    ctx.fillRect(qx + 2, qy + 2, 52, 52);
+    // Yellow highlight divider left of QR
+    ctx.fillStyle = cfg.PAL['7'];
+    ctx.fillRect(lx, py + 55, 144, 2);
 
-    // QR pattern (simple)
-    ctx.fillStyle = cfg.PAL['0'];
-    // Corner squares
-    for (const [ox, oy] of [[4,4],[4,42],[42,4]]) {
-      ctx.fillRect(qx + ox, qy + oy, 10, 10);
-      ctx.fillStyle = cfg.PAL['4'];
-      ctx.fillRect(qx + ox + 2, qy + oy + 2, 6, 6);
-      ctx.fillStyle = cfg.PAL['0'];
-      ctx.fillRect(qx + ox + 4, qy + oy + 4, 2, 2);
-    }
-    // Random dots
-    for (let i = 0; i < 30; i++) {
-      const dx = 16 + ((i * 7 + 3) % 28);
-      const dy = 4 + ((i * 11 + 5) % 48);
-      ctx.fillRect(qx + dx, qy + dy, 2, 2);
-    }
-
-    ctx.font = '5px monospace';
+    // Recommendation block (8px crisp Press Start 2P header + 4x6 crisp lines)
+    ctx.font = '8px "Press Start 2P", monospace';
     ctx.fillStyle = cfg.PAL['B'];
-    ctx.textAlign = 'center';
-    ctx.fillText('SCAN OR ASK', qx + 28, qy + 58);
-    ctx.fillText('STAFF', qx + 28, qy + 64);
-    ctx.textAlign = 'left';
+    ctx.fillText(rec.title, lx, py + 60);
 
-    // Recommendation block
-    const ry = py + 94;
-    ctx.fillStyle = cfg.PAL['7']; // YELLOW highlight
-    ctx.fillRect(px + 4, ry, pw - 8, 2);
-
-    ctx.font = '7px "Press Start 2P", monospace';
-    ctx.fillStyle = cfg.PAL['B'];
-    ctx.fillText(rec.title, lx, ry + 6);
-
-    ctx.font = '6px monospace';
-    ctx.fillStyle = cfg.PAL['0'];
     for (let i = 0; i < rec.lines.length; i++) {
-      ctx.fillText(rec.lines[i], lx, ry + 18 + i * 10);
+      uiArt.drawMiniText(ctx, rec.lines[i], lx, py + 72 + i * 8, cfg.PAL['0']);
     }
 
-    // Budget line
-    ctx.font = '6px monospace';
-    ctx.fillStyle = cfg.PAL['2'];
-    ctx.fillText('Tight budget? Ask about', lx, ry + 50);
-    ctx.fillText('Core Series 3 (AI-ready).', lx, ry + 58);
+    // Budget line (left column)
+    uiArt.drawMiniText(ctx, 'Tight budget? Ask about', lx, py + 99, cfg.PAL['2']);
+    uiArt.drawMiniText(ctx, 'Core Series 3 (AI-ready).', lx, py + 107, cfg.PAL['2']);
 
-    // Footer
+    // QR 56x56 at (168, 44) per section 9.3 with crisp INK border
+    const qx = 168, qy = 44;
+    if (qrLoaded) {
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(qrImg, qx, qy, 56, 56);
+    } else {
+      ctx.fillStyle = cfg.PAL['4'];
+      ctx.fillRect(qx, qy, 56, 56);
+    }
+    uiArt.drawRectOutline(ctx, qx, qy, 56, 56, cfg.PAL['0'], 1);
+
+    uiArt.drawMiniText(ctx, 'SCAN OR ASK', qx + 28, qy + 59, cfg.PAL['B'], { align: 'center' });
+    uiArt.drawMiniText(ctx, 'STAFF', qx + 28, qy + 66, cfg.PAL['B'], { align: 'center' });
+
+    // Footer inside panel (y = 126..150)
     ctx.fillStyle = cfg.PAL['B'];
-    ctx.fillRect(px + 2, py + ph - 24, pw - 4, 22);
+    ctx.fillRect(px + 2, py + ph - 26, pw - 4, 24);
 
-    ctx.font = '5px monospace';
-    ctx.fillStyle = cfg.PAL['4'];
-    ctx.textAlign = 'center';
-    ctx.fillText('NEXT: Ask staff to demo it', px + pw / 2, py + ph - 22);
-    ctx.fillText('Game values are illustrative.', px + pw / 2, py + ph - 14);
-    ctx.fillText('Real battery/speed vary by PC.', px + pw / 2, py + ph - 7);
-    ctx.textAlign = 'left';
+    uiArt.drawMiniText(ctx, 'NEXT: Ask staff to demo it', px + pw / 2, py + ph - 24, cfg.PAL['7'], { align: 'center' });
+    uiArt.drawMiniText(ctx, 'Game values are illustrative.', px + pw / 2, py + ph - 16, cfg.PAL['4'], { align: 'center' });
+    uiArt.drawMiniText(ctx, 'Real battery/speed vary by PC.', px + pw / 2, py + ph - 9, cfg.PAL['4'], { align: 'center' });
 
-    // Tap to restart hint (blinking)
+    // Tap to restart hint (y = 153)
     if (Math.floor(timer / 600) % 2 === 0) {
-      ctx.font = '6px monospace';
-      ctx.fillStyle = cfg.PAL['2'];
-      ctx.textAlign = 'center';
-      ctx.fillText('[TAP TO RESTART]', 120, py + ph + 2);
-      ctx.textAlign = 'left';
+      uiArt.drawMiniText(ctx, '[TAP TO RESTART]', 120, 153, cfg.PAL['4'], { align: 'center' });
     }
   },
 

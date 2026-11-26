@@ -35,8 +35,8 @@ export const art = {
   drawBox(ctx, x, y, w, h, style = 'dialog') {
     const styles = {
       dialog: { fill: cfg.PAL['4'], border: cfg.PAL['0'], shadow: cfg.PAL['1'] },
-      panel:  { fill: cfg.PAL['3'], border: cfg.PAL['0'], shadow: cfg.PAL['1'] },
-      card:   { fill: cfg.PAL['4'], border: cfg.PAL['B'], shadow: null, header: cfg.PAL['B'] },
+      panel: { fill: cfg.PAL['3'], border: cfg.PAL['0'], shadow: cfg.PAL['1'] },
+      card: { fill: cfg.PAL['4'], border: cfg.PAL['B'], shadow: null, header: cfg.PAL['B'] },
     };
     const s = styles[style] || styles.dialog;
 
@@ -65,7 +65,7 @@ export const art = {
   // Get/create cached sprite canvas
   getSpriteData(id) {
     if (spriteCache[id]) return spriteCache[id];
-    
+
     // Try to find the sprite definition
     const spriteDefs = window._spriteData || {};
     const def = spriteDefs[id];
@@ -74,15 +74,16 @@ export const art = {
     const rows = def;
     const h = rows.length;
     const w = rows[0].length;
-    
+
     const offscreen = document.createElement('canvas');
     offscreen.width = w;
     offscreen.height = h;
     const octx = offscreen.getContext('2d');
 
     for (let py = 0; py < h; py++) {
+      const row = rows[py] || '';
       for (let px = 0; px < w; px++) {
-        const key = rows[py][px];
+        const key = row[px] || '.';
         if (key === '.') continue;
         const hex = cfg.PAL[key.toUpperCase()];
         if (hex) {
