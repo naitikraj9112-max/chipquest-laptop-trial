@@ -89,6 +89,94 @@ const MINI_FONT = {
   "'": [4,4,0,0,0,0],
 };
 
+// Ultra-compact 3x5 pixel bitmap font (0 anti-aliasing, step 4px)
+const MICRO_FONT = {
+  ' ': [0,0,0,0,0],
+  'A': [2,5,7,5,5],
+  'B': [6,5,6,5,6],
+  'C': [3,4,4,4,3],
+  'D': [6,5,5,5,6],
+  'E': [7,4,6,4,7],
+  'F': [7,4,6,4,4],
+  'G': [3,4,5,5,3],
+  'H': [5,5,7,5,5],
+  'I': [7,2,2,2,7],
+  'J': [1,1,1,5,2],
+  'K': [5,5,6,5,5],
+  'L': [4,4,4,4,7],
+  'M': [5,7,5,5,5],
+  'N': [6,5,5,5,5],
+  'O': [2,5,5,5,2],
+  'P': [6,5,6,4,4],
+  'Q': [2,5,5,6,3],
+  'R': [6,5,6,5,5],
+  'S': [3,4,2,1,6],
+  'T': [7,2,2,2,2],
+  'U': [5,5,5,5,7],
+  'V': [5,5,5,5,2],
+  'W': [5,5,5,7,5],
+  'X': [5,5,2,5,5],
+  'Y': [5,5,2,2,2],
+  'Z': [7,1,2,4,7],
+  'a': [0,6,3,5,3],
+  'b': [4,6,5,5,6],
+  'c': [0,3,4,4,3],
+  'd': [1,3,5,5,3],
+  'e': [0,2,7,4,3],
+  'f': [3,2,7,2,2],
+  'g': [0,3,5,3,6],
+  'h': [4,6,5,5,5],
+  'i': [2,0,2,2,2],
+  'j': [1,0,1,5,2],
+  'k': [4,5,6,5,5],
+  'l': [6,2,2,2,3],
+  'm': [0,7,5,5,5],
+  'n': [0,6,5,5,5],
+  'o': [0,2,5,5,2],
+  'p': [0,6,5,6,4],
+  'q': [0,3,5,3,1],
+  'r': [0,3,4,4,4],
+  's': [0,3,2,1,6],
+  't': [2,7,2,2,3],
+  'u': [0,5,5,5,3],
+  'v': [0,5,5,2,2],
+  'w': [0,5,5,7,5],
+  'x': [0,5,2,2,5],
+  'y': [0,5,5,3,6],
+  'z': [0,7,2,4,7],
+  '0': [7,5,5,5,7],
+  '1': [2,6,2,2,7],
+  '2': [7,1,2,4,7],
+  '3': [7,1,3,1,7],
+  '4': [5,5,7,1,1],
+  '5': [7,4,6,1,6],
+  '6': [3,4,7,5,7],
+  '7': [7,1,2,2,2],
+  '8': [7,5,7,5,7],
+  '9': [7,5,7,1,6],
+  ':': [0,2,0,2,0],
+  '.': [0,0,0,0,2],
+  ',': [0,0,0,2,4],
+  '!': [2,2,2,0,2],
+  '?': [6,1,2,0,2],
+  '-': [0,0,7,0,0],
+  '+': [0,2,7,2,0],
+  '/': [1,1,2,4,4],
+  '%': [5,1,2,4,5],
+  '(': [1,2,2,2,1],
+  ')': [4,2,2,2,4],
+  '[': [6,4,4,4,6],
+  ']': [3,1,1,1,3],
+  '<': [1,2,4,2,1],
+  '>': [4,2,1,2,4],
+  '=': [0,7,0,7,0],
+  '*': [5,2,7,2,5],
+  '&': [2,5,2,5,3],
+  "'": [2,2,0,0,0],
+  '"': [5,5,0,0,0],
+  '|': [2,2,2,2,2],
+};
+
 export const uiArt = {
   // Draw crisp 1px pixel-aligned rectangle outline (no half-pixel blur)
   drawRectOutline(ctx, x, y, w, h, color, t = 1) {
@@ -124,6 +212,32 @@ export const uiArt = {
         if (bits & 4) ctx.fillRect(gx + 1, iy + r, 1, 1);
         if (bits & 2) ctx.fillRect(gx + 2, iy + r, 1, 1);
         if (bits & 1) ctx.fillRect(gx + 3, iy + r, 1, 1);
+      }
+    }
+  },
+
+  // Draw crisp 3x5 pixel bitmap text (0 anti-aliasing, pure palette colors)
+  drawMicroText(ctx, text, x, y, color = cfg.PAL['4'], opts = {}) {
+    const str = String(text);
+    const step = 4;
+    let startX = Math.floor(x);
+    const iy = Math.floor(y);
+    if (opts.align === 'center') {
+      startX = Math.floor(x - (str.length * step - 1) / 2);
+    } else if (opts.align === 'right') {
+      startX = Math.floor(x - (str.length * step - 1));
+    }
+    ctx.fillStyle = color;
+    for (let i = 0; i < str.length; i++) {
+      const ch = str[i];
+      const glyph = MICRO_FONT[ch] || MICRO_FONT[ch.toUpperCase()] || MICRO_FONT[' '];
+      const gx = startX + i * step;
+      for (let r = 0; r < 5; r++) {
+        const bits = glyph[r];
+        if (!bits) continue;
+        if (bits & 4) ctx.fillRect(gx, iy + r, 1, 1);
+        if (bits & 2) ctx.fillRect(gx + 1, iy + r, 1, 1);
+        if (bits & 1) ctx.fillRect(gx + 2, iy + r, 1, 1);
       }
     }
   },

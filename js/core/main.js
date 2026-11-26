@@ -6,6 +6,7 @@ import { input } from './input.js';
 import { loop } from './loop.js';
 import { sceneManager } from './sceneManager.js';
 import { pauseMenu } from './pause.js';
+import { getStage2Pair } from '../data/laptops.js';
 import { dialogueUI } from '../world/dialogue.js';
 import { art } from '../art/palette.js';
 import { sprites } from '../art/sprites.js';
@@ -119,12 +120,16 @@ async function boot() {
     }
     if (startScene === 'BATTLE2') {
       state.flags.starter = state.flags.starter || 'nova';
-      state.laptops.player = 'aura_pro';
-      state.laptops.rival = 'aura_go';
       state.flags.persona = state.flags.persona || 'student';
+      const pair = getStage2Pair(state.flags.persona);
+      state.laptops.player = pair.player;
+      state.laptops.rival = pair.rival;
     }
     if (startScene === 'PCDEX') {
       state.flags.persona = state.flags.persona || 'student';
+      const pair = getStage2Pair(state.flags.persona);
+      state.laptops.player = pair.player;
+      state.laptops.rival = pair.rival;
     }
     if (startScene === 'RESULT') {
       state.flags.persona = state.flags.persona || 'student';

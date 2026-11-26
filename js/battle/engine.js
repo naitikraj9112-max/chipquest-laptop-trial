@@ -1,6 +1,6 @@
 // js/battle/engine.js — Deterministic battle engine (section 8)
 import { cfg } from '../config.js';
-import { laptops } from '../data/laptops.js';
+import { laptops, getStage2Pair } from '../data/laptops.js';
 import { battle1Moves, battle2Moves, personaMoveLabels, rivalScripts } from '../data/moves.js';
 import { bus } from '../core/bus.js';
 import { state } from '../core/state.js';
@@ -20,8 +20,9 @@ export class BattleEngine {
       this.moves = battle1Moves;
       this.startBatt = 40;
     } else {
-      this.playerLaptopId = 'aura_pro';
-      this.rivalLaptopId = 'aura_go';
+      const pair = getStage2Pair(state.flags.persona || 'student');
+      this.playerLaptopId = (laptops[state.laptops.player]?.profile === 'PRO') ? state.laptops.player : pair.player;
+      this.rivalLaptopId = (laptops[state.laptops.rival]?.profile === 'COMP_AMD') ? state.laptops.rival : pair.rival;
       this.moves = battle2Moves;
       this.startBatt = 50;
     }
@@ -125,13 +126,15 @@ export class BattleEngine {
         effectText = 'Worked, but heavy drain!';
         break;
       case 'SLOW':
-        commentTag = { label: 'WEAK MOVE!', bg: '6', fg: '0' };
-        effectText = 'Slow! Needs a bigger NPU.';
+        commentTag = { label: profile === 'COMP_AMD' ? 'HEAVY DRAW!' : 'WEAK MOVE!', bg: '6', fg: '0' };
+        effectText = profile === 'COMP_AMD'
+          ? '50T NPU works, higher drain!'
+          : 'Slow! Needs a bigger NPU.';
         break;
       case 'SUPER':
         if (prog > move.base.prog) {
           commentTag = { label: 'CRITICAL MOVE!', bg: '7', fg: '0' };
-          effectText = 'Fast NPU boost, low drain!';
+          effectText = 'Intel 18A+NPU 5: Fast & cool!';
         } else {
           commentTag = { label: 'EFFECTIVE!', bg: '9', fg: '4' };
           effectText = mult.engine === 'GPU' ? 'GPU power saved!' : 'NPU saved lots of power!';
@@ -140,7 +143,7 @@ export class BattleEngine {
       case 'BOOST':
         if (mult.engine === 'GPU') {
           commentTag = { label: 'EFFECTIVE!', bg: '9', fg: '4' };
-          effectText = 'GPU boosted task speed!';
+          effectText = 'Intel Xe3/Arc boosted speed!';
         } else {
           commentTag = { label: 'GOOD MOVE!', bg: 'B', fg: '4' };
           effectText = 'CPU finished extra quick!';

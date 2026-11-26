@@ -3,6 +3,7 @@ import { cfg } from '../config.js';
 import { input } from '../core/input.js';
 import { state, resetState } from '../core/state.js';
 import { uiArt } from '../art/ui.js';
+import { laptops, getStage2Pair } from '../data/laptops.js';
 
 const recommendations = {
   student: {
@@ -10,9 +11,9 @@ const recommendations = {
     oem: 'Lenovo Yoga Slim 7 Ultra 14',
     partnerLabel: 'Yoga Slim 7 Ultra 14',
     lines: [
-      'CPU: Core Ultra 5 325 / 7 355',
+      'CPU: Core Ultra 7 355 / 5 325',
       '8C 4.7GHz, 47-49 TOPS NPU 5',
-      'Intel 18A, LP5X, Evo tested',
+      'Intel 18A, LP5X, 75Wh, 975g',
     ],
     budget: [
       'Budget: Acer Swift Air 14',
@@ -24,9 +25,9 @@ const recommendations = {
     oem: 'ThinkPad X9-15p Aura Ed.',
     partnerLabel: 'ThinkPad X9-15p Aura',
     lines: [
-      'Core Ultra X9 388H / X7 368H',
-      '16C 5.1GHz, 18MB, 50 TOPS NPU',
-      'Arc B390 12 Xe3, LP5X-9600',
+      'Core Ultra X9 388H (16C, 5.1GHz)',
+      'Arc B390 12 Xe3, 50T NPU, 88Wh',
+      'LP5X-9600, 18MB, Intel 18A',
     ],
     budget: [
       'Budget: ASUS ExpertBook B3 G2',
@@ -38,9 +39,9 @@ const recommendations = {
     oem: 'Lenovo IdeaPad Pro 5 16',
     partnerLabel: 'Lenovo IdeaPad Pro 5',
     lines: [
-      'Ultra X9 388H / 9 285HX + dGPU',
-      '16-24C, Arc B390, 50 TOPS NPU',
-      'Up to 180 plat. TOPS, dGPU/Xe3',
+      'Ultra X9 388H (16C, 5.1GHz)',
+      'Arc B390 12 Xe3 / RTX opt., 50T',
+      'LP5X-9600, up to 99.9Wh, 18A',
     ],
     budget: [
       'Budget: ASUS Vivobook 15 X1504',
@@ -105,6 +106,8 @@ export const ResultScene = {
 
     const persona = state.flags.persona || 'student';
     const rec = recommendations[persona];
+    const pair = getStage2Pair(persona);
+    const beatLap = laptops[pair.rival];
     const lx = px + 6; // x=14
 
     // Persona icon (16x16 at (14, 26))
@@ -117,31 +120,30 @@ export const ResultScene = {
       }
     }
 
-    // Class & Real OEM Partner stats (rows 26 & 34 span full width above QR y=44!)
-    uiArt.drawMiniText(ctx, `CLASS: ${persona.toUpperCase()}`, lx + 20, py + 18, cfg.PAL['0']);
-    uiArt.drawMiniText(ctx, `PARTNER: ${rec.partnerLabel}`, lx + 20, py + 26, cfg.PAL['B']);
-
-    const batt = state.flags.b2PlayerBatt ?? 38;
+    // Class, Won vs AMD Rival & Stats (crisp 3x5 micro font fits cleanly above QR y=44)
+    const batt = state.flags.b2PlayerBatt ?? 20;
     const turns = state.flags.b2Turns ?? 5;
-    uiArt.drawMiniText(ctx, `BATTERY: ${batt}%   TURNS: ${turns}`, lx, py + 36, cfg.PAL['0']);
+    uiArt.drawMicroText(ctx, `CLASS: ${persona.toUpperCase()}  (BATT:${batt}% T:${turns})`, lx + 20, py + 18, cfg.PAL['0']);
+    uiArt.drawMicroText(ctx, `WON: ${rec.partnerLabel}`, lx + 20, py + 25, cfg.PAL['B']);
+    uiArt.drawMicroText(ctx, `BEAT: ${beatLap ? (beatLap.shortOem || beatLap.oemName) : 'AMD RYZEN AI'}`, lx + 20, py + 32, cfg.PAL['5']);
 
     // Yellow highlight divider left of QR
     ctx.fillStyle = cfg.PAL['7'];
-    ctx.fillRect(lx, py + 44, 144, 2);
+    ctx.fillRect(lx, py + 41, 148, 2);
 
-    // Recommendation block (8px crisp Press Start 2P header + real OEM & CPU specs)
+    // Recommendation block (8px crisp Press Start 2P header + real OEM & CPU specs in 3x5 micro font)
     ctx.font = '8px "Press Start 2P", monospace';
     ctx.fillStyle = cfg.PAL['B'];
-    ctx.fillText(rec.title, lx, py + 49);
+    ctx.fillText(rec.title, lx, py + 48);
 
-    uiArt.drawMiniText(ctx, rec.oem, lx, py + 60, cfg.PAL['B']);
+    uiArt.drawMicroText(ctx, rec.oem, lx, py + 59, cfg.PAL['B']);
     for (let i = 0; i < rec.lines.length; i++) {
-      uiArt.drawMiniText(ctx, rec.lines[i], lx, py + 69 + i * 8, cfg.PAL['0']);
+      uiArt.drawMicroText(ctx, rec.lines[i], lx, py + 67 + i * 8, cfg.PAL['0']);
     }
 
-    // Budget OEM pick (left column)
-    uiArt.drawMiniText(ctx, rec.budget[0], lx, py + 97, cfg.PAL['2']);
-    uiArt.drawMiniText(ctx, rec.budget[1], lx, py + 105, cfg.PAL['2']);
+    // Budget OEM pick (left column, stays well clear of QR at x=168)
+    uiArt.drawMicroText(ctx, rec.budget[0], lx, py + 94, cfg.PAL['2']);
+    uiArt.drawMicroText(ctx, rec.budget[1], lx, py + 102, cfg.PAL['2']);
 
     // QR 56x56 at (168, 44) per section 9.3 with crisp INK border
     const qx = 168, qy = 44;
@@ -154,16 +156,16 @@ export const ResultScene = {
     }
     uiArt.drawRectOutline(ctx, qx, qy, 56, 56, cfg.PAL['0'], 1);
 
-    uiArt.drawMiniText(ctx, 'SCAN OR ASK', qx + 28, qy + 59, cfg.PAL['B'], { align: 'center' });
-    uiArt.drawMiniText(ctx, 'STAFF', qx + 28, qy + 66, cfg.PAL['B'], { align: 'center' });
+    uiArt.drawMicroText(ctx, 'SCAN OR ASK', qx + 28, qy + 59, cfg.PAL['B'], { align: 'center' });
+    uiArt.drawMicroText(ctx, 'STAFF', qx + 28, qy + 66, cfg.PAL['B'], { align: 'center' });
 
     // Footer inside panel (y = 126..150)
     ctx.fillStyle = cfg.PAL['B'];
     ctx.fillRect(px + 2, py + ph - 26, pw - 4, 24);
 
-    uiArt.drawMiniText(ctx, 'NEXT: Ask Reliance Digital staff to demo', px + pw / 2, py + ph - 24, cfg.PAL['7'], { align: 'center' });
-    uiArt.drawMiniText(ctx, 'Game values illustrative. Verify OEM SKU.', px + pw / 2, py + ph - 16, cfg.PAL['4'], { align: 'center' });
-    uiArt.drawMiniText(ctx, 'Real battery & TOPS vary by configuration.', px + pw / 2, py + ph - 9, cfg.PAL['4'], { align: 'center' });
+    uiArt.drawMicroText(ctx, 'NEXT: Ask Reliance Digital staff to demo', px + pw / 2, py + ph - 24, cfg.PAL['7'], { align: 'center' });
+    uiArt.drawMicroText(ctx, 'Game values illustrative. Verify OEM SKU.', px + pw / 2, py + ph - 16, cfg.PAL['4'], { align: 'center' });
+    uiArt.drawMicroText(ctx, 'Real battery & TOPS vary by configuration.', px + pw / 2, py + ph - 9, cfg.PAL['4'], { align: 'center' });
 
     // Tap to restart hint (y = 153)
     if (Math.floor(timer / 600) % 2 === 0) {

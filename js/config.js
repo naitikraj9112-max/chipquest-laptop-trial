@@ -44,10 +44,15 @@ export const cfg = {
   },
 
   // Scene IDs (section 3.6)
-  SCENES: ['TITLE', 'INTRO', 'STORE', 'BATTLE1', 'PERSONA', 'BATTLE2', 'PCDEX', 'RESULT'],
+  SCENES: ['TITLE', 'INTRO', 'STORE', 'BATTLE1', 'PERSONA', 'PCDEX', 'BATTLE2', 'RESULT'],
 
   // Laptop IDs
-  LAPTOPS: ['nova', 'aura_go', 'aura_pro'],
+  LAPTOPS: [
+    'nova', 'aura_go', 'aura_pro',
+    'intel_student', 'amd_student',
+    'intel_creator', 'amd_creator',
+    'intel_gamer', 'amd_gamer',
+  ],
 
   // Persona IDs
   PERSONAS: ['student', 'creator', 'gamer'],

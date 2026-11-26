@@ -134,17 +134,17 @@ export class BattleUI {
     // Background
     this.drawBackground(ctx);
 
-    // Enemy panel (6,6,120x46)
-    this.drawPanel(ctx, 6, 6, this.engine.rival.name, this.displayRival, this.engine.rival);
+    // Enemy panel (6,4,124x49)
+    this.drawPanel(ctx, 6, 4, this.engine.rivalLaptop, this.displayRival, this.engine.rival);
 
-    // Enemy sprite at (170,8) 48x32
-    this.drawLaptopSprite(ctx, this.engine.rivalLaptopId, 170, 8, this.rivalShake);
+    // Enemy sprite at (174,8) 48x32
+    this.drawLaptopSprite(ctx, this.engine.rivalLaptopId, 174, 8, this.rivalShake);
 
-    // Player sprite at (22,62) 48x32
-    this.drawLaptopSprite(ctx, this.engine.playerLaptopId, 22, 62, this.playerShake);
+    // Player sprite at (20,62) 48x32
+    this.drawLaptopSprite(ctx, this.engine.playerLaptopId, 20, 62, this.playerShake);
 
-    // Player panel (114,58,120x46)
-    this.drawPanel(ctx, 114, 58, this.engine.player.name, this.displayPlayer, this.engine.player);
+    // Player panel (110,56,124x49)
+    this.drawPanel(ctx, 110, 56, this.engine.playerLaptop, this.displayPlayer, this.engine.player);
 
     // Bottom box
     this.drawBottomBox(ctx);
@@ -191,41 +191,50 @@ export class BattleUI {
     }
   }
 
-  drawPanel(ctx, px, py, name, display, actual) {
+  drawPanel(ctx, px, py, laptopObj, display, actual) {
+    const pw = 124, ph = 49;
     // Solid palette panel background (INK fill, crisp WHITE border)
     ctx.fillStyle = cfg.PAL['0'];
-    ctx.fillRect(px, py, 120, 46);
-    uiArt.drawRectOutline(ctx, px, py, 120, 46, cfg.PAL['4'], 1);
+    ctx.fillRect(px, py, pw, ph);
+    uiArt.drawRectOutline(ctx, px, py, pw, ph, cfg.PAL['4'], 1);
 
-    // Name
-    ctx.font = '8px "Press Start 2P", monospace';
-    ctx.fillStyle = cfg.PAL['4'];
-    ctx.textBaseline = 'top';
-    ctx.fillText(name, px + 4, py + 3);
+    // Name (crisp 4x6 pixel mini font so full OEM names never collide with engine icon at px+112)
+    const nameColor = laptopObj.brand === 'AMD' ? cfg.PAL['6'] : cfg.PAL['4'];
+    uiArt.drawMiniText(ctx, laptopObj.name, px + 4, py + 3, nameColor);
 
     // Engine icon 8x8 beside actor's name (section 8.7)
     if (actual.lastEngine && window.CQ && window.CQ.art) {
       const engineIcon = `icon_${actual.lastEngine.toLowerCase()}`;
-      window.CQ.art.draw(ctx, engineIcon, px + 109, py + 3);
+      window.CQ.art.draw(ctx, engineIcon, px + 112, py + 2);
+    }
+
+    // Real spec subtitle in compact 3x5 micro font (if available)
+    if (laptopObj.hudSpec) {
+      const specColor = laptopObj.brand === 'AMD' ? cfg.PAL['5'] : cfg.PAL['A'];
+      uiArt.drawMicroText(ctx, laptopObj.hudSpec, px + 4, py + 11, specColor);
+    } else if (laptopObj.id === 'nova') {
+      uiArt.drawMicroText(ctx, 'NO NPU - LEGACY CPU', px + 4, py + 11, cfg.PAL['D']);
+    } else if (laptopObj.id === 'aura_go') {
+      uiArt.drawMicroText(ctx, 'Core Ser.3 | 17T NPU', px + 4, py + 11, cfg.PAL['A']);
     }
 
     // TASK bar (LIME)
-    this.drawBar(ctx, 'TASK', px + 4, py + 14, display.task, 100, cfg.PAL['8']);
+    this.drawBar(ctx, 'TASK', px + 4, py + 19, display.task, 100, cfg.PAL['8']);
 
     // BATT bar (LIME >= 50, YELLOW 21-49, flashes RED <= 20)
     const lowBattFlash = actual.batt <= 20 && Math.floor(Date.now() / 250) % 2 === 1;
     const battColor = actual.batt <= 20
       ? (lowBattFlash ? cfg.PAL['1'] : cfg.PAL['5'])
       : display.batt >= 50 ? cfg.PAL['8'] : cfg.PAL['7'];
-    this.drawBar(ctx, 'BATT', px + 4, py + 25, display.batt, 100, battColor);
+    this.drawBar(ctx, 'BATT', px + 4, py + 28, display.batt, 100, battColor);
 
     // HEAT bar (CYAN < 60, RED + icon_warn >= 60)
     const heatColor = display.heat < 60 ? cfg.PAL['A'] : cfg.PAL['5'];
-    this.drawBar(ctx, 'HEAT', px + 4, py + 36, display.heat, 100, heatColor);
+    this.drawBar(ctx, 'HEAT', px + 4, py + 37, display.heat, 100, heatColor);
 
     // Warning icon 8x8 for high heat (section 8.7)
     if (actual.heat >= 60 && window.CQ && window.CQ.art) {
-      window.CQ.art.draw(ctx, 'icon_warn', px + 111, py + 35);
+      window.CQ.art.draw(ctx, 'icon_warn', px + 113, py + 36);
     }
   }
 
@@ -233,23 +242,27 @@ export class BattleUI {
     // Crisp 4x6 pixel label (fits inside x..x+27)
     uiArt.drawMiniText(ctx, label, x, y + 1, cfg.PAL['3']);
 
-    // Bar 80x6 at panel x+32 (x is already panel x+4)
+    // Bar 82x6 at x+28
     const bx = x + 28;
     ctx.fillStyle = cfg.PAL['1'];
-    ctx.fillRect(bx, y, 80, 6);
+    ctx.fillRect(bx, y, 82, 6);
 
     // Bar fill (inside 1px border)
-    const fillW = Math.max(0, Math.floor((value / max) * 78));
+    const fillW = Math.max(0, Math.floor((value / max) * 80));
     ctx.fillStyle = color;
     ctx.fillRect(bx + 1, y + 1, fillW, 4);
 
     // Crisp 1px border
-    uiArt.drawRectOutline(ctx, bx, y, 80, 6, cfg.PAL['2'], 1);
+    uiArt.drawRectOutline(ctx, bx, y, 82, 6, cfg.PAL['2'], 1);
   }
 
   drawLaptopSprite(ctx, laptopId, x, y, shake) {
     const sx = shake > 0 ? Math.floor((Math.random() - 0.5) * 4) : 0;
-    const spriteId = `spr_laptop_${laptopId}`;
+    const spriteId = laptopId.startsWith('amd_')
+      ? 'spr_laptop_amd'
+      : laptopId.startsWith('intel_')
+        ? 'spr_laptop_aura_pro'
+        : `spr_laptop_${laptopId}`;
     if (window.CQ && window.CQ.art) {
       window.CQ.art.draw(ctx, spriteId, x + sx, y);
       // Animate NOVA X's flashy RGB display while battery remains

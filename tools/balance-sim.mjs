@@ -29,6 +29,15 @@ const laptops = {
       GFX:      { prog: 1.15, batt: 0.50, heat: 0.5 },
       CPU:      { prog: 1.1,  batt: 0.60, heat: 0.6 },
     }
+  },
+  amd_comp: {
+    profile: 'COMP_AMD',
+    multipliers: {
+      AI_HEAVY: { prog: 0.85, batt: 0.65, heat: 0.65 },
+      AI_LIGHT: { prog: 1.0,  batt: 0.40, heat: 0.30 },
+      GFX:      { prog: 1.0,  batt: 0.60, heat: 0.60 },
+      CPU:      { prog: 1.0,  batt: 0.70, heat: 0.70 },
+    }
   }
 };
 
@@ -215,20 +224,20 @@ console.log('I4: AURA PRO completes by turn 5 in BATTLE2...');
   assert('I4', proAlwaysCompletes, 'PRO always completes by turn 5');
 }
 
-// I5: BATTLE2: rival TASK <= 62 when player completes
-console.log('I5: Rival TASK <= 62 when PRO completes...');
+// I5: BATTLE2: AMD competitor rival TASK <= 75 (and never faints) when Intel PRO completes
+console.log('I5: AMD competitor rival TASK <= 75 when Intel PRO completes...');
 {
   const rivalScript = ['M1', 'M2', 'M1', 'M3', 'M2', 'M4'];
   const rival = { task: 0, batt: 50, heat: 0 };
-  const rLaptop = laptops.aura_go;
+  const rLaptop = laptops.amd_comp;
 
-  // Simulate 4 rival turns (PRO completes on turn 5, so rival gets 4 turns)
+  // Simulate 4 rival turns (Intel PRO completes on turn 5, so rival gets 4 turns)
   for (let t = 0; t < 4; t++) {
     const move = battle2Moves[rivalScript[t]];
     simulateMove(rival, rLaptop, move);
     rival.heat = Math.max(0, rival.heat - 5);
   }
-  assert('I5', rival.task <= 62, `Rival TASK is ${rival.task} (expected <= 62)`);
+  assert('I5', rival.task <= 75 && rival.batt > 0, `AMD Rival TASK is ${rival.task}%, BATT is ${rival.batt}% (expected TASK <= 75 & BATT > 0)`);
 }
 
 console.log(`\n=== Results: ${pass} passed, ${fail} failed ===`);

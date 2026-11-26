@@ -38,7 +38,10 @@ export function createBattleScene(defaultBattleId) {
       }
 
       // Show intro message
-      ui.queueMessage(D.BI1.text, true);
+      const introMsg = battleId === 'BATTLE2'
+        ? `STAGE 2! ${engine.playerLaptop.name} vs ${engine.rivalLaptop.name}!`
+        : D.BI1.text;
+      ui.queueMessage(introMsg, true);
       ui.onMessagesDone = () => {
         phase = 'battle';
         ui.showingMenu = true;
@@ -286,14 +289,14 @@ export function createBattleScene(defaultBattleId) {
         window.CQ.sceneManager.switchTo('STORE');
         window.CQ.fx.wipeIn(cfg.WIPE_MS);
       } else {
-        // After BATTLE2: post-battle dialogue R6, G17-G20 then PCDEX (section 7.4)
+        // After BATTLE2: Stage 2 victory debrief R6, G17-G19, G21, G22 -> RESULT Trainer Card
         phase = 'post_battle2';
         window.CQ.audio.playMusic('MUS_RESULT', { fadeMs: 300 });
-        const postPages = [D.R6, D.G17, D.G18, D.G19, D.G20];
+        const postPages = [D.R6, D.G17, D.G18, D.G19, D.G21, D.G22];
         dialogueUI.show(postPages, () => {
           phase = 'transitioning';
           window.CQ.fx.wipeOut(cfg.WIPE_MS).then(() => {
-            window.CQ.sceneManager.switchTo('PCDEX');
+            window.CQ.sceneManager.switchTo('RESULT');
             window.CQ.fx.wipeIn(cfg.WIPE_MS);
           });
         });

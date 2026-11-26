@@ -22,8 +22,8 @@ export const claims = {
     status: 'Verified per OEM PSREF & announcement citations in report'
   },
   C6: {
-    claim: 'AMD Ryzen AI and Qualcomm Snapdragon X include NPUs; Apple Silicon uses Neural Engine on macOS',
-    status: 'Verified comparison notes; Arm emulation note for some Windows apps'
+    claim: 'AMD comparators: Ryzen AI 9 HX 370 (12C/24T, 5.1 GHz, 36MB, Radeon 890M, 50 TOPS XDNA 2) in ASUS Zenbook S 16 UM5606 (LP5X-7500, 78Wh) & ROG Zephyrus G16 GA605 (90Wh); Ryzen AI 7 350 (8C/16T, 5.0 GHz, Radeon 860M, 50 TOPS) in Acer Swift 14 AI SFG14-64 (75Wh)',
+    status: 'Verified per AMD/ASUS/Acer official specs'
   },
   C7: {
     claim: 'Supported local AI runtimes: OpenVINO, Windows ML, ONNX Runtime, DirectML, WebNN; TOPS are peak INT8',

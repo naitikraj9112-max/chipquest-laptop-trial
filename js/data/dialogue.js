@@ -44,34 +44,34 @@ export const dialogue = {
   G11: { speaker: 'PROF. CHIP', text: s('AURA GO has an NPU: a mini chip made for AI.') },
   G12: { speaker: 'PROF. CHIP', text: s('It does AI work with far less power and heat.') },
 
-  // Persona
-  G13: { speaker: 'PROF. CHIP', text: s('Now, what kind of trainer are you?') },
-  G14s: { speaker: 'PROF. CHIP', text: s('Studying! Then you need long battery and offline AI.') },
-  G14c: { speaker: 'PROF. CHIP', text: s('Creating! You need AI power for photos and video.') },
-  G14g: { speaker: 'PROF. CHIP', text: s('Gaming! You need smooth frames and cool temps.') },
+  // Persona & Stage 2 transition into PC-DEX
+  G13: { speaker: 'PROF. CHIP', text: s('STAGE 2! What kind of trainer are you?') },
+  G14s: { speaker: 'PROF. CHIP', text: s('Studying! Let PC-DEX scan for your best Intel AI PC!') },
+  G14c: { speaker: 'PROF. CHIP', text: s('Creating! Let PC-DEX scan for your best Intel AI PC!') },
+  G14g: { speaker: 'PROF. CHIP', text: s('Gaming! Let PC-DEX scan for your best Intel AI PC!') },
 
-  Gf1: { speaker: 'PROF. CHIP', text: s('ROHAN, take AURA GO for the rematch.') },
-  G15: { speaker: 'PROF. CHIP', text: s('Take AURA PRO: Core Ultra Series 3 (50 TOPS NPU, Evo)!') },
+  Gf1: { speaker: 'PROF. CHIP', text: s('Now step up for the Stage 2 championship!') },
+  G15: { speaker: 'PROF. CHIP', text: s('PC-DEX chose your Intel Core Ultra Series 3 rig!') },
 
-  R5: { speaker: 'ROHAN', text: s('Bring it! AURA GO never lets me down!') },
+  R5: { speaker: 'ROHAN', text: s('Haha! I grabbed an AMD Ryzen AI PC! Rematch me!') },
 
   // Battle 2 intros
-  B2s: { speaker: 'PROF. CHIP', text: s('ROUND 2! Exam night. Finish before battery dies!') },
-  B2c: { speaker: 'PROF. CHIP', text: s('ROUND 2! Reel deadline. Finish before battery dies!') },
-  B2g: { speaker: 'PROF. CHIP', text: s('ROUND 2! Stream night. Finish before battery dies!') },
+  B2s: { speaker: 'PROF. CHIP', text: s('STAGE 2! Exam night at 50% battery. Finish first!') },
+  B2c: { speaker: 'PROF. CHIP', text: s('STAGE 2! Reel deadline at 50% battery. Finish first!') },
+  B2g: { speaker: 'PROF. CHIP', text: s('STAGE 2! Stream night at 50% battery. Finish first!') },
 
   // Mid-battle
   W1: { speaker: 'PROF. CHIP', text: s('No internet? AI on your laptop still works!') },
   W2: { speaker: 'PROF. CHIP', text: s('Your files can stay on your laptop.') },
 
   // After battle 2
-  R6: { speaker: 'ROHAN', text: s('What?! You crushed me!') },
-  G17: { speaker: 'PROF. CHIP', text: s("That's the power of the right AI PC.") },
-  G18: { speaker: 'PROF. CHIP', text: s('CPU is quick. GPU is strong. NPU is efficient.') },
-  G19: { speaker: 'PROF. CHIP', text: s('An AI PC uses all three, so it stays fast and cool.') },
-  G20: { speaker: 'PROF. CHIP', text: s("Let's scan the competition!") },
+  R6: { speaker: 'ROHAN', text: s('My AMD Ryzen AI rig lost on speed AND battery?!') },
+  G17: { speaker: 'PROF. CHIP', text: s('Both have 50 TOPS NPUs, yet Intel Core Ultra leads!') },
+  G18: { speaker: 'PROF. CHIP', text: s('Intel 18A, Arc Xe3, LP5X-9600 & NPU 5 stay cooler.') },
+  G19: { speaker: 'PROF. CHIP', text: s('With OpenVINO & Evo tuning, Intel finishes first!') },
+  G20: { speaker: 'PROF. CHIP', text: s('PC-DEX locked your Intel laptop vs Rohan\'s AMD rival!') },
   G21: { speaker: 'PROF. CHIP', text: s('Intel Evo laptops are tested for battery and wake.') },
-  G22: { speaker: 'PROF. CHIP', text: s("Here's your TRAINER CARD. Show it to the team!") },
+  G22: { speaker: 'PROF. CHIP', text: s("Here's your STAGE 2 WINNER CARD! Show our staff!") },
 
   // Battle intro
   BI1: { speaker: 'system', text: s('ROHAN challenges you! Finish before battery dies!') },

@@ -285,14 +285,14 @@ function handleInteraction() {
 function handleCardInput() {
   const click = input.consumeClick();
   if (click) {
-    // Panel 38..202, 28..130: bottom-right = LOOK AGAIN, left/panel = TAKE IT
-    if (click.x >= 114 && click.y >= 110) {
+    // Panel 28..212, 26..132: bottom-right = LOOK AGAIN, left/panel = TAKE IT
+    if (click.x >= 118 && click.y >= 110) {
       laptopCardShowing = false;
       laptopCardId = null;
       if (window.CQ) window.CQ.audio.playSfx('sfx_cancel');
       return;
     }
-    if (click.x >= 38 && click.x <= 202 && click.y >= 28 && click.y <= 130) {
+    if (click.x >= 28 && click.x <= 212 && click.y >= 26 && click.y <= 132) {
       pickLaptop(laptopCardId);
       return;
     }
@@ -313,8 +313,8 @@ function drawLaptopCard(ctx, id) {
   const laptop = laptops[id];
   if (!laptop) return;
 
-  // Panel 164x102 centred around (38, 28)
-  const px = 38, py = 28, pw = 164, ph = 102;
+  // Panel 184x106 centred at (28, 26) so detailed specs fit cleanly inside borders
+  const px = 28, py = 26, pw = 184, ph = 106;
   ctx.fillStyle = cfg.PAL['4'];
   ctx.fillRect(px, py, pw, ph);
   uiArt.drawRectOutline(ctx, px, py, pw, ph, id === 'nova' ? cfg.PAL['C'] : cfg.PAL['B'], 2);
@@ -330,13 +330,13 @@ function drawLaptopCard(ctx, id) {
   if (id === 'nova') {
     const blinkTag = Math.floor(Date.now() / 300) % 2 === 0;
     ctx.fillStyle = blinkTag ? cfg.PAL['7'] : cfg.PAL['5'];
-    ctx.fillRect(px + 94, py + 4, 66, 10);
-    uiArt.drawMiniText(ctx, '+ FREE MERCH!', px + 96, py + 6, blinkTag ? cfg.PAL['0'] : cfg.PAL['4']);
+    ctx.fillRect(px + pw - 60, py + 4, 56, 10);
+    uiArt.drawMicroText(ctx, '+ FREE MERCH!', px + pw - 32, py + 7, blinkTag ? cfg.PAL['0'] : cfg.PAL['4'], { align: 'center' });
   }
 
   // Laptop sprite inside card right side
-  const sx = px + 110;
-  const sy = py + 20;
+  const sx = px + pw - 54;
+  const sy = py + 19;
   if (window.CQ && window.CQ.art) {
     window.CQ.art.draw(ctx, `spr_laptop_${id}`, sx, sy);
   }
@@ -358,34 +358,43 @@ function drawLaptopCard(ctx, id) {
     }
   }
 
-  // Stats on left side using crisp 4x6 pixel font
-  uiArt.drawMiniText(ctx, `Look: ${'*'.repeat(laptop.look)}`, px + 6, py + 22, cfg.PAL['0']);
+  // Stats on left side using crisp compact 3x5 micro pixel font
+  uiArt.drawMicroText(ctx, `Look: ${'*'.repeat(laptop.look)}`, px + 6, py + 21, cfg.PAL['0']);
 
   if (id === 'nova') {
-    uiArt.drawMiniText(ctx, 'Price:', px + 6, py + 33, cfg.PAL['0']);
+    uiArt.drawMicroText(ctx, 'Price:', px + 6, py + 30, cfg.PAL['0']);
     ctx.fillStyle = cfg.PAL['5']; // RED tag
-    ctx.fillRect(px + 37, py + 31, 49, 9);
-    uiArt.drawMiniText(ctx, 'SALE -30%', px + 39, py + 33, cfg.PAL['4']);
+    ctx.fillRect(px + 31, py + 28, 41, 9);
+    uiArt.drawMicroText(ctx, 'SALE -30%', px + 51, py + 30, cfg.PAL['4'], { align: 'center' });
   } else {
-    uiArt.drawMiniText(ctx, `Price: ${laptop.priceTag}`, px + 6, py + 33, cfg.PAL['0']);
+    uiArt.drawMicroText(ctx, `Price: ${laptop.priceTag}`, px + 6, py + 30, cfg.PAL['0']);
   }
 
-  uiArt.drawMiniText(ctx, `Battery: ${laptop.battery}`, px + 6, py + 44, cfg.PAL['0']);
-  uiArt.drawMiniText(ctx, `AI speed: ${laptop.aiSpeed}`, px + 6, py + 55, cfg.PAL['0']);
+  uiArt.drawMicroText(ctx, `Battery: ${laptop.battery}`, px + 6, py + 39, cfg.PAL['0']);
+  uiArt.drawMicroText(ctx, `AI speed: ${laptop.aiSpeed}`, px + 6, py + 48, cfg.PAL['0']);
 
-  // Offer badge or Intel chip line
+  // Offer badge or compact Intel spec lines (fit cleanly inside px..px+pw)
   if (id === 'nova') {
     ctx.fillStyle = cfg.PAL['7'];
-    ctx.fillRect(px + 4, py + 65, pw - 8, 12);
-    uiArt.drawRectOutline(ctx, px + 4, py + 65, pw - 8, 12, cfg.PAL['5'], 1);
-    uiArt.drawMiniText(ctx, laptop.chipLine, px + Math.floor(pw / 2), py + 68, cfg.PAL['0'], { align: 'center' });
-  } else if (laptop.chipLine) {
-    uiArt.drawMiniText(ctx, laptop.chipLine, px + 6, py + 68, cfg.PAL['B']);
+    ctx.fillRect(px + 5, py + 58, pw - 10, 13);
+    uiArt.drawRectOutline(ctx, px + 5, py + 58, pw - 10, 13, cfg.PAL['5'], 1);
+    uiArt.drawMicroText(ctx, laptop.chipLine, px + Math.floor(pw / 2), py + 62, cfg.PAL['0'], { align: 'center' });
+    uiArt.drawMicroText(ctx, 'RGB LIGHTS + DISPLAY DEAL!', px + Math.floor(pw / 2), py + 76, cfg.PAL['C'], { align: 'center' });
+  } else {
+    ctx.fillStyle = cfg.PAL['4'];
+    ctx.fillRect(px + 5, py + 58, pw - 10, 22);
+    uiArt.drawRectOutline(ctx, px + 5, py + 58, pw - 10, 22, cfg.PAL['A'], 1);
+    if (laptop.chipLine) {
+      uiArt.drawMicroText(ctx, laptop.chipLine, px + 9, py + 61, cfg.PAL['B']);
+    }
+    if (laptop.specSub) {
+      uiArt.drawMicroText(ctx, laptop.specSub, px + 9, py + 70, cfg.PAL['0']);
+    }
   }
 
-  // Choice line
+  // Choice line centered
   const cardPrompt = input.isTouch ? '[A] TAKE IT   [B] LOOK AGAIN' : '[Z] TAKE IT   [X] LOOK AGAIN';
-  uiArt.drawMiniText(ctx, cardPrompt, px + 6, py + 87, cfg.PAL['B']);
+  uiArt.drawMiniText(ctx, cardPrompt, px + Math.floor(pw / 2), py + 89, cfg.PAL['B'], { align: 'center' });
 }
 
 function pickLaptop(id) {
