@@ -1,5 +1,6 @@
 // js/world/entity.js — NPC and player entities (section 6)
 import { cfg } from '../config.js';
+import { state } from '../core/state.js';
 
 export class Entity {
   constructor(id, col, row, dir = 'down', spriteBase = '') {
@@ -22,8 +23,9 @@ export class Entity {
   }
 
   get spriteId() {
+    const base = (this.spriteBase === 'spr_player' && state.playerGender === 'girl') ? 'spr_player_girl' : this.spriteBase;
     const d = this.dir === 'right' ? 'left' : this.dir;
-    return `${this.spriteBase}_${d}_${this.frame}`;
+    return `${base}_${d}_${this.frame}`;
   }
 
   get flipX() {

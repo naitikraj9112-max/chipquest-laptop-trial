@@ -49,11 +49,15 @@
   <!-- Fullscreen button (section 12) -->
   <button id="btn-fullscreen" title="Fullscreen">⛶</button>
 
-  <!-- Pokemon-style player name prompt modal -->
-  <div id="name-modal" class="hidden" role="dialog" aria-modal="true" aria-label="Enter trainer name">
+  <!-- Pokemon-style player character & name prompt modal -->
+  <div id="name-modal" class="hidden" role="dialog" aria-modal="true" aria-label="Choose trainer appearance and name">
     <div id="name-card">
-      <div id="name-title">YOUR NAME?</div>
-      <div id="name-sub">Prof. Chip wants to register your Trainer Card!</div>
+      <div id="name-title">TRAINER CARD</div>
+      <div id="name-sub">Are you a boy or a girl? And what's your name?</div>
+      <div id="gender-row" role="radiogroup" aria-label="Choose boy or girl">
+        <button type="button" class="gender-btn selected" data-gender="boy"><canvas class="gender-prev" width="32" height="32"></canvas><span>BOY</span></button>
+        <button type="button" class="gender-btn" data-gender="girl"><canvas class="gender-prev" width="32" height="32"></canvas><span>GIRL</span></button>
+      </div>
       <input id="name-input" type="text" maxlength="10" placeholder="ASH" autocomplete="off" spellcheck="false" />
       <div id="name-presets">
         <button type="button" class="name-preset" data-name="ASH">ASH</button>

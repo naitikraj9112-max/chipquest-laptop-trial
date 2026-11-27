@@ -17,14 +17,20 @@ export const IntroScene = {
   enter() {
     phase = 0;
     timer = 0;
-    // Show storefront card, then dialogue pages I1-I3
+    // Show storefront card, then dialogue pages I1-I3, then ask Boy or Girl before entering store
     dialogueUI.show(introPages, () => {
-      // After all intro text, go to store
-      if (window.CQ) {
-        window.CQ.fx.wipeOut(cfg.WIPE_MS).then(() => {
-          window.CQ.sceneManager.switchTo('STORE');
-          window.CQ.fx.wipeIn(cfg.WIPE_MS);
-        });
+      const enterStore = () => {
+        if (window.CQ) {
+          window.CQ.fx.wipeOut(cfg.WIPE_MS).then(() => {
+            window.CQ.sceneManager.switchTo('STORE');
+            window.CQ.fx.wipeIn(cfg.WIPE_MS);
+          });
+        }
+      };
+      if (window.CQ?.askPlayerGender) {
+        window.CQ.askPlayerGender(enterStore);
+      } else {
+        enterStore();
       }
     });
   },

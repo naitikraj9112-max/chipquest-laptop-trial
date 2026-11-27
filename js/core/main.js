@@ -54,40 +54,107 @@ async function boot() {
     input,
     loop,
     isModalOpen: false,
+    askPlayerGender: null,
     askPlayerName: null,
   };
 
-  // Name Prompt modal wiring (asked on first interaction with Prof. Chip)
+  // Shared modal wiring: mode = 'gender' (at game start) | 'name' (with Prof. Chip later)
   const nameModal = document.getElementById('name-modal');
+  const nameTitle = document.getElementById('name-title');
+  const nameSub = document.getElementById('name-sub');
+  const genderRow = document.getElementById('gender-row');
   const nameInput = document.getElementById('name-input');
+  const namePresetsRow = document.getElementById('name-presets');
   const nameOkBtn = document.getElementById('name-ok');
-  window.CQ.askPlayerName = cb => {
-    if (!nameModal || !nameInput || !nameOkBtn) {
-      state.playerName = state.playerName || 'ASH';
-      if (cb) cb(state.playerName);
+
+  function openTrainerModal(mode, cb) {
+    if (!nameModal || !nameOkBtn) {
+      if (cb) cb(mode === 'gender' ? state.playerGender : state.playerName);
       return;
     }
     window.CQ.isModalOpen = true;
     input.flush();
-    nameInput.value = '';
+
+    let selectedGender = state.playerGender || 'boy';
+    const isGender = mode === 'gender';
+    const genderBtns = Array.from(nameModal.querySelectorAll('.gender-btn'));
+    const presetBtns = Array.from(nameModal.querySelectorAll('.name-preset'));
+
+    if (nameTitle) nameTitle.textContent = isGender ? 'BOY OR GIRL?' : 'YOUR NAME?';
+    if (nameSub) {
+      nameSub.textContent = isGender
+        ? 'Choose your trainer before entering the store!'
+        : 'Prof. Chip wants to register your Trainer Card!';
+    }
+    if (genderRow) genderRow.style.display = isGender ? 'flex' : 'none';
+    if (nameInput) nameInput.style.display = isGender ? 'none' : 'block';
+    if (namePresetsRow) namePresetsRow.style.display = isGender ? 'none' : 'flex';
+
+    const syncGenderUI = () => {
+      const presets = selectedGender === 'girl' ? ['MISTY', 'MAY', 'DAWN'] : ['ASH', 'RED', 'KAI'];
+      if (nameInput) nameInput.placeholder = presets[0];
+      genderBtns.forEach(b => {
+        const g = b.getAttribute('data-gender');
+        b.classList.toggle('selected', g === selectedGender);
+        const cv = b.querySelector('.gender-prev');
+        const spr = art.getSpriteData(g === 'girl' ? 'spr_player_girl_down_0' : 'spr_player_down_0');
+        if (cv && spr) {
+          const pctx = cv.getContext('2d');
+          pctx.imageSmoothingEnabled = false;
+          pctx.clearRect(0, 0, cv.width, cv.height);
+          pctx.drawImage(spr.canvas, 0, 0, cv.width, cv.height);
+        }
+      });
+      presetBtns.forEach((b, i) => {
+        b.setAttribute('data-name', presets[i]);
+        b.textContent = presets[i];
+      });
+    };
+
+    syncGenderUI();
+    if (!isGender && nameInput) {
+      nameInput.value = '';
+      setTimeout(() => { try { nameInput.focus(); } catch {} }, 30);
+    } else {
+      setTimeout(() => { try { nameOkBtn.focus(); } catch {} }, 30);
+    }
     nameModal.classList.remove('hidden');
-    setTimeout(() => { try { nameInput.focus(); } catch {} }, 30);
 
     const submit = () => {
-      const raw = (nameInput.value || '').trim().toUpperCase().replace(/[^A-Z0-9 _-]/g, '').slice(0, 10);
-      const chosen = raw || 'ASH';
-      state.playerName = chosen;
+      let chosen;
+      if (isGender) {
+        state.playerGender = selectedGender;
+        chosen = selectedGender;
+      } else {
+        const fallback = (state.playerGender || 'boy') === 'girl' ? 'MISTY' : 'ASH';
+        const raw = (nameInput?.value || '').trim().toUpperCase().replace(/[^A-Z0-9 _-]/g, '').slice(0, 10);
+        chosen = raw || fallback;
+        state.playerName = chosen;
+        nameInput?.blur();
+      }
       nameModal.classList.add('hidden');
       window.CQ.isModalOpen = false;
       input.flush();
-      nameInput.blur();
       cleanup();
       if (window.CQ.audio) window.CQ.audio.playSfx('sfx_confirm');
       if (cb) cb(chosen);
     };
 
-    const onKey = e => {
-      if (e.key === 'Enter') {
+    const setGender = g => {
+      if (!g || g === selectedGender) return;
+      selectedGender = g;
+      state.playerGender = g;
+      syncGenderUI();
+      if (window.CQ.audio) window.CQ.audio.playSfx('sfx_cursor');
+    };
+
+    const onGender = e => setGender(e.currentTarget?.getAttribute?.('data-gender'));
+    const onModalKey = e => {
+      if (isGender) {
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); setGender('boy'); }
+        else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); setGender('girl'); }
+        else if (e.key === 'Enter' || e.key === 'z' || e.key === 'Z') { e.preventDefault(); e.stopPropagation(); submit(); }
+      } else if (e.key === 'Enter') {
         e.preventDefault();
         e.stopPropagation();
         submit();
@@ -95,22 +162,26 @@ async function boot() {
     };
     const onPreset = e => {
       const n = e.target?.getAttribute?.('data-name');
-      if (n) {
+      if (n && nameInput) {
         nameInput.value = n;
         submit();
       }
     };
-    const presetBtns = Array.from(nameModal.querySelectorAll('.name-preset'));
     const cleanup = () => {
       nameOkBtn.removeEventListener('click', submit);
-      nameInput.removeEventListener('keydown', onKey);
+      window.removeEventListener('keydown', onModalKey, true);
+      genderBtns.forEach(b => b.removeEventListener('click', onGender));
       presetBtns.forEach(b => b.removeEventListener('click', onPreset));
     };
 
     nameOkBtn.addEventListener('click', submit);
-    nameInput.addEventListener('keydown', onKey);
+    window.addEventListener('keydown', onModalKey, true);
+    genderBtns.forEach(b => b.addEventListener('click', onGender));
     presetBtns.forEach(b => b.addEventListener('click', onPreset));
-  };
+  }
+
+  window.CQ.askPlayerGender = cb => openTrainerModal('gender', cb);
+  window.CQ.askPlayerName = cb => openTrainerModal('name', cb);
 
   // Initialize art
   art.init();
