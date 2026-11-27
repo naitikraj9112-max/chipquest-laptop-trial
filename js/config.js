@@ -12,7 +12,7 @@ export const cfg = {
   BAR_TWEEN_MS: 300,
   BATTLE_MSG_MS: 800,
   WIPE_MS: 600,
-  IDLE_RESET_S: 60,
+  IDLE_RESET_S: 0, // disabled: stay on current screen indefinitely when idle
   STORE_NAME: 'RELIANCE DIGITAL',
   NEXT_STEP_URL: 'https://www.intel.com/content/www/us/en/ai-pc/overview.html',
   

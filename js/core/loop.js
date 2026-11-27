@@ -2,7 +2,7 @@
 import { cfg } from '../config.js';
 import { sceneManager } from './sceneManager.js';
 import { input } from './input.js';
-import { state, resetState } from './state.js';
+import { state } from './state.js';
 import { uiArt } from '../art/ui.js';
 import { pauseMenu } from './pause.js';
 
@@ -12,7 +12,6 @@ let running = false;
 let scale = 1;
 let offsetX = 0, offsetY = 0;
 let debugMode = false;
-let idleResetting = false;
 
 export const loop = {
   get canvas() { return canvas; },
@@ -91,7 +90,7 @@ function tick(now) {
   if (window.CQ?.isModalOpen) {
     input.resetFrame();
   } else if (input.pauseJustPressed()) {
-    if (sceneManager.currentId && sceneManager.currentId !== 'TITLE' && !idleResetting) {
+    if (sceneManager.currentId && sceneManager.currentId !== 'TITLE') {
       pauseMenu.toggle();
     }
     input.resetFrame();
@@ -100,21 +99,6 @@ function tick(now) {
     if (window.CQ && window.CQ.fx) window.CQ.fx.update(dt);
     input.resetFrame();
   } else {
-    // Idle reset (section 12)
-    if (Date.now() - input.lastInput > cfg.IDLE_RESET_S * 1000) {
-      if (!idleResetting && sceneManager.currentId && sceneManager.currentId !== 'TITLE') {
-        idleResetting = true;
-        window.CQ?.fx?.wipeOut(cfg.WIPE_MS).then(() => {
-          resetState();
-          sceneManager.switchTo('TITLE');
-          window.CQ?.fx?.wipeIn(cfg.WIPE_MS);
-          idleResetting = false;
-        });
-      }
-    } else {
-      idleResetting = false;
-    }
-
     // Update — scenes poll input during their update
     sceneManager.update(dt);
     if (window.CQ && window.CQ.fx) window.CQ.fx.update(dt);
